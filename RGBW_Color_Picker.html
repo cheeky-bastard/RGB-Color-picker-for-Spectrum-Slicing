@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RGBW Color Picker (Offline)</title>
+  <style>
+    :root {
+      --bg: #020617;
+      --panel: rgba(15, 23, 42, 0.6);
+      --panel2: rgba(2, 6, 23, 0.35);
+      --border: #1f2937;
+      --border2: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --active: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 24px;
+      font-weight: 750;
+      letter-spacing: 0.2px;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 14px;
+      line-height: 1.35;
+    }
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+    @media (min-width: 980px) {
+      .grid { grid-template-columns: 420px 1fr; }
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .label {
+      font-weight: 650;
+      font-size: 14px;
+    }
+    input, button {
+      background: rgba(2, 6, 23, 0.5);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #64748b;
+    }
+    button {
+      cursor: pointer;
+    }
+    button:hover {
+      background: rgba(15, 23, 42, 0.7);
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    /* Paint-style swatch grid */
+    .paintGrid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 8px;
+      max-height: 620px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+    @media (max-width: 980px) {
+      .paintGrid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      .paintGrid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    }
+    .paintSwatch {
+      padding: 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(2, 6, 23, 0.3);
+      aspect-ratio: 1 / 1;
+      position: relative;
+    }
+    .paintSwatch:hover {
+      border-color: #64748b;
+    }
+    .paintSwatch.active {
+      border-color: var(--active);
+      box-shadow: 0 0 0 2px rgba(226,232,240,.22);
+    }
+    .paintColor {
+      width: 100%;
+      height: 100%;
+      border-radius: 9px;
+      border: 1px solid rgba(51, 65, 85, 0.65);
+    }
+    .tooltip {
+      position: absolute;
+      left: 50%;
+      top: -8px;
+      transform: translate(-50%, -100%);
+      background: rgba(2, 6, 23, 0.92);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 120ms ease;
+      z-index: 5;
+    }
+    .paintSwatch:hover .tooltip {
+      opacity: 1;
+    }
+
+    /* Right side detail */
+    .bigSwatch {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      border: 1px solid var(--border2);
+      flex: 0 0 auto;
+    }
+    .pillRow {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .pill {
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(2, 6, 23, 0.35);
+      font-size: 13px;
+    }
+    .pill.active {
+      border-color: #94a3b8;
+      background: rgba(30, 41, 59, 0.55);
+    }
+
+    .mapGrid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    @media (max-width: 640px) {
+      .mapGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .mapBox {
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+    }
+    .mapBox .muted { display:block; }
+    .mapBox input {
+      width: 100%;
+      border: none;
+      padding: 6px 0 0 0;
+      background: transparent;
+      font-size: 18px;
+      font-weight: 750;
+      border-radius: 0;
+    }
+    .box {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+    }
+    .box .mono {
+      margin-top: 8px;
+      line-height: 1.6;
+      word-break: break-word;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>RGBW Color Picker (Offline)</h1>
+    <div class="sub">
+      Click a swatch to see its minimized RGBW channel pattern and a numeric pattern based on your channel IDs (R/G/B/W).
+      Works offline—single HTML file.
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="row" style="margin-bottom: 10px;">
+          <div class="label">Colors</div>
+          <input id="search" placeholder="Search name or hex…" />
+        </div>
+        <div class="muted" id="count" style="margin-bottom: 10px;"></div>
+        <div class="paintGrid" id="swatchGrid"></div>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <div style="display:flex; gap:12px; align-items:center;">
+            <div class="bigSwatch" id="bigSwatch"></div>
+            <div>
+              <div id="selName" style="font-size:18px; font-weight:800;">—</div>
+              <div class="muted" id="selMeta">—</div>
+            </div>
+          </div>
+          <div class="pillRow">
+            <button class="pill active" id="btnInterleaved" type="button">Interleaved</button>
+            <button class="pill" id="btnGrouped" type="button">Grouped</button>
+          </div>
+        </div>
+
+        <div style="height: 12px;"></div>
+
+        
+        <div style="margin-bottom: 8px; text-align: center; font-weight: 800; color: #3b82f6; font-size: 15px;">
+          Spool Slot Location Mapping
+        </div>
+<div class="mapGrid">
+          <div class="mapBox">
+            <span class="muted">R =</span>
+            <input id="mapR" inputmode="numeric" value="1" />
+          </div>
+          <div class="mapBox">
+            <span class="muted">G =</span>
+            <input id="mapG" inputmode="numeric" value="2" />
+          </div>
+          <div class="mapBox">
+            <span class="muted">B =</span>
+            <input id="mapB" inputmode="numeric" value="3" />
+          </div>
+          <div class="mapBox">
+            <span class="muted">W =</span>
+            <input id="mapW" inputmode="numeric" value="4" />
+          </div>
+        </div>
+
+        <div style="height: 12px;"></div>
+
+        <div class="box">
+          <div class="muted">Channel pattern</div>
+          <div class="mono" id="channelPattern">—</div>
+          <div style="height: 10px;"></div>
+          <button id="copyChannel" type="button">Copy channel pattern</button>
+        </div>
+
+        <div style="height: 12px;"></div>
+
+        <div class="box">
+          <div class="row">
+            <div style="flex:1; min-width:0;">
+              <div class="muted">Numeric pattern</div>
+              <div class="mono" id="numericPattern">—</div>
+            </div>
+            <button id="copyNumeric" type="button">Copy</button>
+          </div>
+        </div>
+
+        <div style="height: 10px;"></div>
+        <div class="muted">Tip: change R/G/B/W numbers to match your controller channel IDs.</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="application/json" id="colors-data">[{"name": "Color 001", "hex": "#A62929", "ratio_min": "11:0:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 002", "hex": "#CC3333", "ratio_min": "11:0:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 003", "hex": "#BF2626", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 004", "hex": "#B22121", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 005", "hex": "#CC2626", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 006", "hex": "#DB2929", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 007", "hex": "#F08080", "ratio_min": "3:0:0:1", "pattern_grouped_min": "R:R:R:W", "pattern_interleaved_min": "R:W:R:R"}, {"name": "Color 008", "hex": "#ED6363", "ratio_min": "5:0:0:1", "pattern_grouped_min": "R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R"}, {"name": "Color 009", "hex": "#ED3B3B", "ratio_min": "11:0:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 010", "hex": "#ED2B2B", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 011", "hex": "#CC0000", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 012", "hex": "#ED0000", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 013", "hex": "#FF0000", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 014", "hex": "#FF3030", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 015", "hex": "#FF4040", "ratio_min": "11:0:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 016", "hex": "#FF6B6B", "ratio_min": "5:0:0:1", "pattern_grouped_min": "R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R"}, {"name": "Color 017", "hex": "#FFC2C2", "ratio_min": "1:0:0:1", "pattern_grouped_min": "R:W", "pattern_interleaved_min": "R:W"}, {"name": "Color 018", "hex": "#FFCCCC", "ratio_min": "5:0:0:7", "pattern_grouped_min": "R:R:R:R:R:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:W:R:W:R:W:R:W:R:W:W:W"}, {"name": "Color 019", "hex": "#F24740", "ratio_min": "11:0:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 020", "hex": "#E3170D", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 021", "hex": "#FC1400", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 022", "hex": "#CC1200", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 023", "hex": "#FA8073", "ratio_min": "9:1:0:2", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:G:W:W", "pattern_interleaved_min": "R:G:W:R:W:R:R:R:R:R:R:R"}, {"name": "Color 024", "hex": "#FFE3E0", "ratio_min": "1:0:0:3", "pattern_grouped_min": "R:W:W:W", "pattern_interleaved_min": "R:W:W:W"}, {"name": "Color 025", "hex": "#FF2400", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 026", "hex": "#FF5433", "ratio_min": "11:1:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 027", "hex": "#FF6347", "ratio_min": "10:1:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:G:W", "pattern_interleaved_min": "R:G:W:R:R:R:R:R:R:R:R:R"}, {"name": "Color 028", "hex": "#FF3300", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 029", "hex": "#FF8C69", "ratio_min": "9:1:0:2", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:G:W:W", "pattern_interleaved_min": "R:G:W:R:W:R:R:R:R:R:R:R"}, {"name": "Color 030", "hex": "#FF5721", "ratio_min": "11:1:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 031", "hex": "#CC3800", "ratio_min": "11:1:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 032", "hex": "#ED4000", "ratio_min": "11:1:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 033", "hex": "#FF4500", "ratio_min": "11:1:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 034", "hex": "#FF804F", "ratio_min": "10:1:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:G:W", "pattern_interleaved_min": "R:G:W:R:R:R:R:R:R:R:R:R"}, {"name": "Color 035", "hex": "#FFA17A", "ratio_min": "4:1:0:1", "pattern_grouped_min": "R:R:R:R:G:W", "pattern_interleaved_min": "R:G:W:R:R:R"}, {"name": "Color 036", "hex": "#F77530", "ratio_min": "5:1:0:0", "pattern_grouped_min": "R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R"}, {"name": "Color 037", "hex": "#FAA16B", "ratio_min": "4:1:0:1", "pattern_grouped_min": "R:R:R:R:G:W", "pattern_interleaved_min": "R:G:W:R:R:R"}, {"name": "Color 038", "hex": "#FF6103", "ratio_min": "11:1:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 039", "hex": "#FF7317", "ratio_min": "5:1:0:0", "pattern_grouped_min": "R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R"}, {"name": "Color 040", "hex": "#FFE8D6", "ratio_min": "4:1:0:7", "pattern_grouped_min": "R:R:R:R:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:W:R:W:R:W:W:W:W"}, {"name": "Color 041", "hex": "#FF8C00", "ratio_min": "5:1:0:0", "pattern_grouped_min": "R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R"}, {"name": "Color 042", "hex": "#FFD49C", "ratio_min": "2:1:0:1", "pattern_grouped_min": "R:R:G:W", "pattern_interleaved_min": "R:G:W:R"}, {"name": "Color 043", "hex": "#FFF0DB", "ratio_min": "3:2:0:7", "pattern_grouped_min": "R:R:R:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:W:W:W:W:W"}, {"name": "Color 044", "hex": "#FFA600", "ratio_min": "3:1:0:0", "pattern_grouped_min": "R:R:R:G", "pattern_interleaved_min": "R:G:R:R"}, {"name": "Color 045", "hex": "#FFE8BA", "ratio_min": "5:3:0:4", "pattern_grouped_min": "R:R:R:R:R:G:G:G:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:W:R"}, {"name": "Color 046", "hex": "#FFAB00", "ratio_min": "3:1:0:0", "pattern_grouped_min": "R:R:R:G", "pattern_interleaved_min": "R:G:R:R"}, {"name": "Color 047", "hex": "#FFB00F", "ratio_min": "2:1:0:0", "pattern_grouped_min": "R:R:G", "pattern_interleaved_min": "R:G:R"}, {"name": "Color 048", "hex": "#EDAD0D", "ratio_min": "2:1:0:0", "pattern_grouped_min": "R:R:G", "pattern_interleaved_min": "R:G:R"}, {"name": "Color 049", "hex": "#FFC226", "ratio_min": "2:1:0:0", "pattern_grouped_min": "R:R:G", "pattern_interleaved_min": "R:G:R"}, {"name": "Color 050", "hex": "#E6B526", "ratio_min": "2:1:0:0", "pattern_grouped_min": "R:R:G", "pattern_interleaved_min": "R:G:R"}, {"name": "Color 051", "hex": "#EDCC61", "ratio_min": "7:4:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:R:R:R"}, {"name": "Color 052", "hex": "#E6BD3B", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 053", "hex": "#CCAB2E", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 054", "hex": "#FFCC12", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 055", "hex": "#FCD117", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 056", "hex": "#FFF2B5", "ratio_min": "1:1:0:1", "pattern_grouped_min": "R:G:W", "pattern_interleaved_min": "R:G:W"}, {"name": "Color 057", "hex": "#FCDB3B", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 058", "hex": "#FFED8C", "ratio_min": "3:2:0:1", "pattern_grouped_min": "R:R:R:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R"}, {"name": "Color 059", "hex": "#EDDE82", "ratio_min": "3:2:0:1", "pattern_grouped_min": "R:R:R:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R"}, {"name": "Color 060", "hex": "#CCAD00", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 061", "hex": "#EDC900", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 062", "hex": "#FFD600", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 063", "hex": "#FFE303", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 064", "hex": "#F0E68C", "ratio_min": "5:5:0:2", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:R:G:R:G"}, {"name": "Color 065", "hex": "#FAED5C", "ratio_min": "6:5:0:1", "pattern_grouped_min": "R:R:R:R:R:R:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:R:G:R"}, {"name": "Color 066", "hex": "#FFE600", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 067", "hex": "#FFFACC", "ratio_min": "4:3:0:5", "pattern_grouped_min": "R:R:R:R:G:G:G:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:W:W"}, {"name": "Color 068", "hex": "#EDE8AB", "ratio_min": "1:1:0:1", "pattern_grouped_min": "R:G:W", "pattern_interleaved_min": "R:G:W"}, {"name": "Color 069", "hex": "#EDE685", "ratio_min": "5:5:0:2", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:R:G:R:G"}, {"name": "Color 070", "hex": "#FFF58F", "ratio_min": "5:5:0:2", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:R:G:R:G"}, {"name": "Color 071", "hex": "#FFFCCF", "ratio_min": "1:1:0:2", "pattern_grouped_min": "R:G:W:W", "pattern_interleaved_min": "R:G:W:W"}, {"name": "Color 072", "hex": "#EDED00", "ratio_min": "1:1:0:0", "pattern_grouped_min": "R:G", "pattern_interleaved_min": "R:G"}, {"name": "Color 073", "hex": "#FFFF00", "ratio_min": "1:1:0:0", "pattern_grouped_min": "R:G", "pattern_interleaved_min": "R:G"}, {"name": "Color 074", "hex": "#FFFF7D", "ratio_min": "5:5:0:2", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:R:G:R:G"}, {"name": "Color 075", "hex": "#FFFFAB", "ratio_min": "5:4:0:3", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:G:R"}, {"name": "Color 076", "hex": "#FFFFCC", "ratio_min": "4:3:0:5", "pattern_grouped_min": "R:R:R:R:G:G:G:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:W:W"}, {"name": "Color 077", "hex": "#FFFFE0", "ratio_min": "3:2:0:7", "pattern_grouped_min": "R:R:R:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:W:W:W:W:W"}, {"name": "Color 078", "hex": "#F5F775", "ratio_min": "5:6:0:1", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:R:G:G"}, {"name": "Color 079", "hex": "#D1E330", "ratio_min": "5:7:0:0", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:G:G"}, {"name": "Color 080", "hex": "#C7F526", "ratio_min": "5:7:0:0", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:G:G"}, {"name": "Color 081", "hex": "#ABDE00", "ratio_min": "1:2:0:0", "pattern_grouped_min": "R:G:G", "pattern_interleaved_min": "R:G:G"}, {"name": "Color 082", "hex": "#BDE838", "ratio_min": "5:7:0:0", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:G:G"}, {"name": "Color 083", "hex": "#D4ED91", "ratio_min": "4:5:0:3", "pattern_grouped_min": "R:R:R:R:G:G:G:G:G:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:G:G"}, {"name": "Color 084", "hex": "#BFE654", "ratio_min": "4:7:0:1", "pattern_grouped_min": "R:R:R:R:G:G:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:G:G:G"}, {"name": "Color 085", "hex": "#9CCC1A", "ratio_min": "1:2:0:0", "pattern_grouped_min": "R:G:G", "pattern_interleaved_min": "R:G:G"}, {"name": "Color 086", "hex": "#E8F2D4", "ratio_min": "2:3:0:7", "pattern_grouped_min": "R:R:G:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:G:W:W:W:W:W"}, {"name": "Color 087", "hex": "#BFFF3D", "ratio_min": "1:2:0:0", "pattern_grouped_min": "R:G:G", "pattern_interleaved_min": "R:G:G"}, {"name": "Color 088", "hex": "#DEFFA6", "ratio_min": "1:2:0:1", "pattern_grouped_min": "R:G:G:W", "pattern_interleaved_min": "R:G:W:G"}, {"name": "Color 089", "hex": "#BDED69", "ratio_min": "4:7:0:1", "pattern_grouped_min": "R:R:R:R:G:G:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:G:G:G"}, {"name": "Color 090", "hex": "#C9FF70", "ratio_min": "4:7:0:1", "pattern_grouped_min": "R:R:R:R:G:G:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:G:G:G"}, {"name": "Color 091", "hex": "#ADFF2E", "ratio_min": "1:3:0:0", "pattern_grouped_min": "R:G:G:G", "pattern_interleaved_min": "R:G:G:G"}, {"name": "Color 092", "hex": "#75ED00", "ratio_min": "1:5:0:0", "pattern_grouped_min": "R:G:G:G:G:G", "pattern_interleaved_min": "R:G:G:G:G:G"}, {"name": "Color 093", "hex": "#7DFC00", "ratio_min": "1:5:0:0", "pattern_grouped_min": "R:G:G:G:G:G", "pattern_interleaved_min": "R:G:G:G:G:G"}, {"name": "Color 094", "hex": "#B5EDB5", "ratio_min": "0:5:0:7", "pattern_grouped_min": "G:G:G:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "G:W:G:W:G:W:G:W:G:W:W:W"}, {"name": "Color 095", "hex": "#8FED8F", "ratio_min": "0:2:0:1", "pattern_grouped_min": "G:G:W", "pattern_interleaved_min": "G:W:G"}, {"name": "Color 096", "hex": "#99FA99", "ratio_min": "0:2:0:1", "pattern_grouped_min": "G:G:W", "pattern_interleaved_min": "G:W:G"}, {"name": "Color 097", "hex": "#00FF00", "ratio_min": "0:1:0:0", "pattern_grouped_min": "G", "pattern_interleaved_min": "G"}, {"name": "Color 098", "hex": "#33FF33", "ratio_min": "0:1:0:0", "pattern_grouped_min": "G", "pattern_interleaved_min": "G"}, {"name": "Color 099", "hex": "#66FF66", "ratio_min": "0:5:0:1", "pattern_grouped_min": "G:G:G:G:G:W", "pattern_interleaved_min": "G:W:G:G:G:G"}, {"name": "Color 100", "hex": "#99FF99", "ratio_min": "0:2:0:1", "pattern_grouped_min": "G:G:W", "pattern_interleaved_min": "G:W:G"}, {"name": "Color 101", "hex": "#C2FFC2", "ratio_min": "0:1:0:1", "pattern_grouped_min": "G:W", "pattern_interleaved_min": "G:W"}, {"name": "Color 102", "hex": "#CCFFCC", "ratio_min": "0:5:0:7", "pattern_grouped_min": "G:G:G:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "G:W:G:W:G:W:G:W:G:W:W:W"}, {"name": "Color 103", "hex": "#F0FFF0", "ratio_min": "0:1:0:5", "pattern_grouped_min": "G:W:W:W:W:W", "pattern_interleaved_min": "G:W:W:W:W:W"}, {"name": "Color 104", "hex": "#00FF33", "ratio_min": "0:1:0:0", "pattern_grouped_min": "G", "pattern_interleaved_min": "G"}, {"name": "Color 105", "hex": "#54FF9E", "ratio_min": "0:9:2:1", "pattern_grouped_min": "G:G:G:G:G:G:G:G:G:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:G:G:G:G:G:G"}, {"name": "Color 106", "hex": "#D1FAED", "ratio_min": "0:3:2:7", "pattern_grouped_min": "G:G:G:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:W:W:W:W:W"}, {"name": "Color 107", "hex": "#4AE8BD", "ratio_min": "0:7:4:1", "pattern_grouped_min": "G:G:G:G:G:G:G:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:G:G:G"}, {"name": "Color 108", "hex": "#0FDEB0", "ratio_min": "0:2:1:0", "pattern_grouped_min": "G:G:B", "pattern_interleaved_min": "G:B:G"}, {"name": "Color 109", "hex": "#A3DBD1", "ratio_min": "0:4:3:5", "pattern_grouped_min": "G:G:G:G:B:B:B:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:W:G:W:W"}, {"name": "Color 110", "hex": "#00FFCC", "ratio_min": "0:7:5:0", "pattern_grouped_min": "G:G:G:G:G:G:G:B:B:B:B:B", "pattern_interleaved_min": "G:B:G:B:G:B:G:B:G:B:G:G"}, {"name": "Color 111", "hex": "#DBFFF7", "ratio_min": "0:3:2:7", "pattern_grouped_min": "G:G:G:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:W:W:W:W:W"}, {"name": "Color 112", "hex": "#D9F5F0", "ratio_min": "0:1:1:4", "pattern_grouped_min": "G:B:W:W:W:W", "pattern_interleaved_min": "G:B:W:W:W:W"}, {"name": "Color 113", "hex": "#36DBC9", "ratio_min": "0:7:5:0", "pattern_grouped_min": "G:G:G:G:G:G:G:B:B:B:B:B", "pattern_interleaved_min": "G:B:G:B:G:B:G:B:G:B:G:G"}, {"name": "Color 114", "hex": "#40E0D1", "ratio_min": "0:6:5:1", "pattern_grouped_min": "G:G:G:G:G:G:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:G:B:G"}, {"name": "Color 115", "hex": "#8FFFFA", "ratio_min": "0:5:5:2", "pattern_grouped_min": "G:G:G:G:G:B:B:B:B:B:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:G:B:G:B"}, {"name": "Color 116", "hex": "#8CEDED", "ratio_min": "0:5:5:2", "pattern_grouped_min": "G:G:G:G:G:B:B:B:B:B:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:G:B:G:B"}, {"name": "Color 117", "hex": "#38FCFC", "ratio_min": "0:1:1:0", "pattern_grouped_min": "G:B", "pattern_interleaved_min": "G:B"}, {"name": "Color 118", "hex": "#00EDED", "ratio_min": "0:1:1:0", "pattern_grouped_min": "G:B", "pattern_interleaved_min": "G:B"}, {"name": "Color 119", "hex": "#00FFFF", "ratio_min": "0:1:1:0", "pattern_grouped_min": "G:B", "pattern_interleaved_min": "G:B"}, {"name": "Color 120", "hex": "#BAFFFF", "ratio_min": "0:1:1:1", "pattern_grouped_min": "G:B:W", "pattern_interleaved_min": "G:B:W"}, {"name": "Color 121", "hex": "#E0FFFF", "ratio_min": "0:3:2:7", "pattern_grouped_min": "G:G:G:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:W:W:W:W:W"}, {"name": "Color 122", "hex": "#00E6ED", "ratio_min": "0:1:1:0", "pattern_grouped_min": "G:B", "pattern_interleaved_min": "G:B"}, {"name": "Color 123", "hex": "#00F5FF", "ratio_min": "0:1:1:0", "pattern_grouped_min": "G:B", "pattern_interleaved_min": "G:B"}, {"name": "Color 124", "hex": "#66E6ED", "ratio_min": "0:5:6:1", "pattern_grouped_min": "G:G:G:G:G:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:G:B:B"}, {"name": "Color 125", "hex": "#05EDFF", "ratio_min": "0:1:1:0", "pattern_grouped_min": "G:B", "pattern_interleaved_min": "G:B"}, {"name": "Color 126", "hex": "#99F5FF", "ratio_min": "0:5:5:2", "pattern_grouped_min": "G:G:G:G:G:B:B:B:B:B:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:G:B:G:B"}, {"name": "Color 127", "hex": "#63D1F5", "ratio_min": "0:4:7:1", "pattern_grouped_min": "G:G:G:G:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:B:B:B"}, {"name": "Color 128", "hex": "#BFF0FF", "ratio_min": "0:3:4:5", "pattern_grouped_min": "G:G:G:B:B:B:B:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:W:B:W:W"}, {"name": "Color 129", "hex": "#0AB5FF", "ratio_min": "0:1:2:0", "pattern_grouped_min": "G:B:B", "pattern_interleaved_min": "G:B:B"}, {"name": "Color 130", "hex": "#42BFFA", "ratio_min": "0:1:2:0", "pattern_grouped_min": "G:B:B", "pattern_interleaved_min": "G:B:B"}, {"name": "Color 131", "hex": "#A3D4ED", "ratio_min": "0:3:5:4", "pattern_grouped_min": "G:G:G:B:B:B:B:B:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:W:B:W:B"}, {"name": "Color 132", "hex": "#82CFFC", "ratio_min": "0:3:7:2", "pattern_grouped_min": "G:G:G:B:B:B:B:B:B:B:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:B:B:B:B"}, {"name": "Color 133", "hex": "#66C7FF", "ratio_min": "0:4:7:1", "pattern_grouped_min": "G:G:G:G:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:B:B:B"}, {"name": "Color 134", "hex": "#B0E3FF", "ratio_min": "0:3:5:4", "pattern_grouped_min": "G:G:G:B:B:B:B:B:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:W:B:W:B"}, {"name": "Color 135", "hex": "#87CFFA", "ratio_min": "0:2:3:1", "pattern_grouped_min": "G:G:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:B"}, {"name": "Color 136", "hex": "#63B8FF", "ratio_min": "0:3:8:1", "pattern_grouped_min": "G:G:G:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:B:B:B:B:B"}, {"name": "Color 137", "hex": "#73BAFA", "ratio_min": "0:3:7:2", "pattern_grouped_min": "G:G:G:B:B:B:B:B:B:B:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:B:B:B:B"}, {"name": "Color 138", "hex": "#0080FF", "ratio_min": "0:1:5:0", "pattern_grouped_min": "G:B:B:B:B:B", "pattern_interleaved_min": "G:B:B:B:B:B"}, {"name": "Color 139", "hex": "#C7E3FF", "ratio_min": "0:1:2:3", "pattern_grouped_min": "G:B:B:W:W:W", "pattern_interleaved_min": "G:B:W:B:W:W"}, {"name": "Color 140", "hex": "#7DB5FF", "ratio_min": "0:1:4:1", "pattern_grouped_min": "G:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:B:B:B"}, {"name": "Color 141", "hex": "#5C8FF5", "ratio_min": "0:2:9:1", "pattern_grouped_min": "G:G:B:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:B:B:B:B:B:B:B"}, {"name": "Color 142", "hex": "#1463F5", "ratio_min": "0:1:11:0", "pattern_grouped_min": "G:B:B:B:B:B:B:B:B:B:B:B", "pattern_interleaved_min": "G:B:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 143", "hex": "#0047FA", "ratio_min": "0:1:11:0", "pattern_grouped_min": "G:B:B:B:B:B:B:B:B:B:B:B", "pattern_interleaved_min": "G:B:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 144", "hex": "#003DFF", "ratio_min": "0:1:11:0", "pattern_grouped_min": "G:B:B:B:B:B:B:B:B:B:B:B", "pattern_interleaved_min": "G:B:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 145", "hex": "#E6E6FA", "ratio_min": "0:0:1:5", "pattern_grouped_min": "B:W:W:W:W:W", "pattern_interleaved_min": "B:W:W:W:W:W"}, {"name": "Color 146", "hex": "#0000FF", "ratio_min": "0:0:1:0", "pattern_grouped_min": "B", "pattern_interleaved_min": "B"}, {"name": "Color 147", "hex": "#4C4CFF", "ratio_min": "0:0:11:1", "pattern_grouped_min": "B:B:B:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "B:W:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 148", "hex": "#ABABFF", "ratio_min": "0:0:7:5", "pattern_grouped_min": "B:B:B:B:B:B:B:W:W:W:W:W", "pattern_interleaved_min": "B:W:B:W:B:W:B:W:B:W:B:B"}, {"name": "Color 149", "hex": "#CCCCFF", "ratio_min": "0:0:5:7", "pattern_grouped_min": "B:B:B:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "B:W:B:W:B:W:B:W:B:W:W:W"}, {"name": "Color 150", "hex": "#F7F7FF", "ratio_min": "0:0:1:11", "pattern_grouped_min": "B:W:W:W:W:W:W:W:W:W:W:W", "pattern_interleaved_min": "B:W:W:W:W:W:W:W:W:W:W:W"}, {"name": "Color 151", "hex": "#3300FF", "ratio_min": "0:0:1:0", "pattern_grouped_min": "B", "pattern_interleaved_min": "B"}, {"name": "Color 152", "hex": "#AB82FF", "ratio_min": "1:0:4:1", "pattern_grouped_min": "R:B:B:B:B:W", "pattern_interleaved_min": "R:B:W:B:B:B"}, {"name": "Color 153", "hex": "#6600FF", "ratio_min": "1:0:11:0", "pattern_grouped_min": "R:B:B:B:B:B:B:B:B:B:B:B", "pattern_interleaved_min": "R:B:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 154", "hex": "#8000FF", "ratio_min": "1:0:5:0", "pattern_grouped_min": "R:B:B:B:B:B", "pattern_interleaved_min": "R:B:B:B:B:B"}, {"name": "Color 155", "hex": "#9C30FF", "ratio_min": "1:0:3:0", "pattern_grouped_min": "R:B:B:B", "pattern_interleaved_min": "R:B:B:B"}, {"name": "Color 156", "hex": "#BF5EFF", "ratio_min": "3:0:8:1", "pattern_grouped_min": "R:R:R:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "R:B:W:R:B:R:B:B:B:B:B:B"}, {"name": "Color 157", "hex": "#9933CC", "ratio_min": "1:0:2:0", "pattern_grouped_min": "R:B:B", "pattern_interleaved_min": "R:B:B"}, {"name": "Color 158", "hex": "#AB00FF", "ratio_min": "1:0:3:0", "pattern_grouped_min": "R:B:B:B", "pattern_interleaved_min": "R:B:B:B"}, {"name": "Color 159", "hex": "#9400D4", "ratio_min": "1:0:2:0", "pattern_grouped_min": "R:B:B", "pattern_interleaved_min": "R:B:B"}, {"name": "Color 160", "hex": "#CC00FF", "ratio_min": "5:0:7:0", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:B:B", "pattern_interleaved_min": "R:B:R:B:R:B:R:B:R:B:B:B"}, {"name": "Color 161", "hex": "#E066FF", "ratio_min": "5:0:6:1", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:B:W", "pattern_interleaved_min": "R:B:W:R:B:R:B:R:B:R:B:B"}, {"name": "Color 162", "hex": "#DEA1DE", "ratio_min": "1:0:1:1", "pattern_grouped_min": "R:B:W", "pattern_interleaved_min": "R:B:W"}, {"name": "Color 163", "hex": "#DB70DB", "ratio_min": "5:0:5:2", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:W:W", "pattern_interleaved_min": "R:B:W:R:B:W:R:B:R:B:R:B"}, {"name": "Color 164", "hex": "#EDADED", "ratio_min": "1:0:1:1", "pattern_grouped_min": "R:B:W", "pattern_interleaved_min": "R:B:W"}, {"name": "Color 165", "hex": "#ED82ED", "ratio_min": "5:0:5:2", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:W:W", "pattern_interleaved_min": "R:B:W:R:B:W:R:B:R:B:R:B"}, {"name": "Color 166", "hex": "#CC00CC", "ratio_min": "1:0:1:0", "pattern_grouped_min": "R:B", "pattern_interleaved_min": "R:B"}, {"name": "Color 167", "hex": "#ED00ED", "ratio_min": "1:0:1:0", "pattern_grouped_min": "R:B", "pattern_interleaved_min": "R:B"}, {"name": "Color 168", "hex": "#FF00FF", "ratio_min": "1:0:1:0", "pattern_grouped_min": "R:B", "pattern_interleaved_min": "R:B"}, {"name": "Color 169", "hex": "#FFBAFF", "ratio_min": "1:0:1:1", "pattern_grouped_min": "R:B:W", "pattern_interleaved_min": "R:B:W"}, {"name": "Color 170", "hex": "#FFE0FF", "ratio_min": "3:0:2:7", "pattern_grouped_min": "R:R:R:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:B:W:R:B:W:R:W:W:W:W:W"}, {"name": "Color 171", "hex": "#FF82FA", "ratio_min": "5:0:5:2", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:W:W", "pattern_interleaved_min": "R:B:W:R:B:W:R:B:R:B:R:B"}, {"name": "Color 172", "hex": "#FF00CC", "ratio_min": "7:0:5:0", "pattern_grouped_min": "R:R:R:R:R:R:R:B:B:B:B:B", "pattern_interleaved_min": "R:B:R:B:R:B:R:B:R:B:R:R"}, {"name": "Color 173", "hex": "#FF00AB", "ratio_min": "3:0:1:0", "pattern_grouped_min": "R:R:R:B", "pattern_interleaved_min": "R:B:R:R"}, {"name": "Color 174", "hex": "#FF33B2", "ratio_min": "2:0:1:0", "pattern_grouped_min": "R:R:B", "pattern_interleaved_min": "R:B:R"}, {"name": "Color 175", "hex": "#FF69B5", "ratio_min": "8:0:3:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:B:B:B:W", "pattern_interleaved_min": "R:B:W:R:B:R:B:R:R:R:R:R"}, {"name": "Color 176", "hex": "#FF3D96", "ratio_min": "3:0:1:0", "pattern_grouped_min": "R:R:R:B", "pattern_interleaved_min": "R:B:R:R"}, {"name": "Color 177", "hex": "#FF0066", "ratio_min": "11:0:1:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:B", "pattern_interleaved_min": "R:B:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 178", "hex": "#F5CCD9", "ratio_min": "4:0:1:7", "pattern_grouped_min": "R:R:R:R:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:B:W:R:W:R:W:R:W:W:W:W"}, {"name": "Color 179", "hex": "#FF82AB", "ratio_min": "4:0:1:1", "pattern_grouped_min": "R:R:R:R:B:W", "pattern_interleaved_min": "R:B:W:R:R:R"}, {"name": "Color 180", "hex": "#FFF0F5", "ratio_min": "1:0:0:5", "pattern_grouped_min": "R:W:W:W:W:W", "pattern_interleaved_min": "R:W:W:W:W:W"}, {"name": "Color 181", "hex": "#FFB5C4", "ratio_min": "6:0:1:5", "pattern_grouped_min": "R:R:R:R:R:R:B:W:W:W:W:W", "pattern_interleaved_min": "R:B:W:R:W:R:W:R:W:R:W:R"}, {"name": "Color 182", "hex": "#FF0033", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 183", "hex": "#F54C54", "ratio_min": "11:0:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 184", "hex": "#FF030D", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}]</script>
+
+  <script>
+    const COLORS = JSON.parse(document.getElementById('colors-data').textContent);
+
+    function normalizeHex(hex) {
+      const h = String(hex || '').trim();
+      if (!h) return '';
+      return h.startsWith('#') ? h : ('#' + h);
+    }
+    function isValidHex(hex) {
+      return /^#([0-9a-fA-F]{6})$/.test(hex);
+    }
+
+    function hexToRgb(hex) {
+      const h = normalizeHex(hex);
+      if (!isValidHex(h)) return null;
+      const v = h.slice(1);
+      const r = parseInt(v.slice(0,2), 16);
+      const g = parseInt(v.slice(2,4), 16);
+      const b = parseInt(v.slice(4,6), 16);
+      return {r,g,b};
+    }
+
+    function rgbToHsv(r,g,b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r,g,b), min = Math.min(r,g,b);
+      const d = max - min;
+      let h = 0;
+      if (d !== 0) {
+        if (max === r) h = ((g - b) / d) % 6;
+        else if (max === g) h = (b - r) / d + 2;
+        else h = (r - g) / d + 4;
+        h *= 60;
+        if (h < 0) h += 360;
+      }
+      const s = max === 0 ? 0 : d / max;
+      const v = max;
+      return {h, s, v};
+    }
+
+    const sortedColors = COLORS.slice().sort((a,b) => {
+      const ra = hexToRgb(a.hex);
+      const rb = hexToRgb(b.hex);
+      if (!ra && !rb) return 0;
+      if (!ra) return 1;
+      if (!rb) return -1;
+      const ha = rgbToHsv(ra.r,ra.g,ra.b);
+      const hb = rgbToHsv(rb.r,rb.g,rb.b);
+      if (ha.h !== hb.h) return ha.h - hb.h;
+      if (ha.s !== hb.s) return ha.s - hb.s;
+      return ha.v - hb.v;
+    });
+
+    let mode = 'interleaved';
+    let filtered = sortedColors;
+    let selected = filtered[0] || null;
+
+    const el = {
+      search: document.getElementById('search'),
+      count: document.getElementById('count'),
+      grid: document.getElementById('swatchGrid'),
+      bigSwatch: document.getElementById('bigSwatch'),
+      selName: document.getElementById('selName'),
+      selMeta: document.getElementById('selMeta'),
+      btnInter: document.getElementById('btnInterleaved'),
+      btnGroup: document.getElementById('btnGrouped'),
+      mapR: document.getElementById('mapR'),
+      mapG: document.getElementById('mapG'),
+      mapB: document.getElementById('mapB'),
+      mapW: document.getElementById('mapW'),
+      channelPattern: document.getElementById('channelPattern'),
+      numericPattern: document.getElementById('numericPattern'),
+      copyChannel: document.getElementById('copyChannel'),
+      copyNumeric: document.getElementById('copyNumeric'),
+    };
+
+    function getPatternFor(c) {
+      if (!c) return '';
+      return mode === 'grouped' ? (c.pattern_grouped_min || '') : (c.pattern_interleaved_min || '');
+    }
+
+    function parsePattern(pattern) {
+      return String(pattern || '')
+        .split(':')
+        .map(t => t.trim().toUpperCase())
+        .filter(Boolean);
+    }
+
+    function getMap() {
+      return {
+        R: String(el.mapR.value || '').trim(),
+        G: String(el.mapG.value || '').trim(),
+        B: String(el.mapB.value || '').trim(),
+        W: String(el.mapW.value || '').trim(),
+      };
+    }
+
+    function toNumeric(tokens, map) {
+      return tokens.map(t => (map[t] != null && map[t] !== '' ? map[t] : '?'));
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (e) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+    }
+
+    function renderGrid() {
+      el.grid.innerHTML = '';
+      el.count.textContent = `${filtered.length} / ${sortedColors.length} colors`;
+      for (const c of filtered) {
+        const hx = normalizeHex(c.hex);
+        const btn = document.createElement('button');
+        btn.className = 'paintSwatch' + (selected && selected.name === c.name && selected.hex === c.hex ? ' active' : '');
+        btn.type = 'button';
+
+        const tip = document.createElement('div');
+        tip.className = 'tooltip';
+        tip.textContent = `${c.name} • ${hx}`;
+
+        const inner = document.createElement('div');
+        inner.className = 'paintColor';
+        inner.style.backgroundColor = isValidHex(hx) ? hx : 'transparent';
+
+        btn.appendChild(tip);
+        btn.appendChild(inner);
+
+        btn.addEventListener('click', () => {
+          selected = c;
+          renderGrid();
+          renderDetails();
+        });
+
+        el.grid.appendChild(btn);
+      }
+    }
+
+    function renderDetails() {
+      if (!selected) {
+        el.selName.textContent = '—';
+        el.selMeta.textContent = '—';
+        el.bigSwatch.style.backgroundColor = 'transparent';
+        el.channelPattern.textContent = '—';
+        el.numericPattern.textContent = '—';
+        return;
+      }
+      const hx = normalizeHex(selected.hex);
+      el.bigSwatch.style.backgroundColor = isValidHex(hx) ? hx : 'transparent';
+      el.selName.textContent = selected.name || '—';
+      const ratio = selected.ratio_min ? ` • ratio ${selected.ratio_min}` : '';
+      el.selMeta.textContent = `${hx}${ratio}`;
+
+      const patt = getPatternFor(selected);
+      el.channelPattern.textContent = patt || '—';
+
+      const tokens = parsePattern(patt);
+      const map = getMap();
+      const numeric = toNumeric(tokens, map);
+      el.numericPattern.textContent = numeric.length ? numeric.join(':') : '—';
+    }
+
+    function applyModeButtons() {
+      if (mode === 'interleaved') {
+        el.btnInter.classList.add('active');
+        el.btnGroup.classList.remove('active');
+      } else {
+        el.btnGroup.classList.add('active');
+        el.btnInter.classList.remove('active');
+      }
+    }
+
+    function applyFilter() {
+      const q = String(el.search.value || '').trim().toLowerCase();
+      if (!q) {
+        filtered = sortedColors;
+      } else {
+        filtered = sortedColors.filter(c => {
+          const name = String(c.name || '').toLowerCase();
+          const hx = String(c.hex || '').toLowerCase();
+          return name.includes(q) || hx.includes(q);
+        });
+      }
+      if (filtered.length && (!selected || !filtered.some(c => c.name === selected.name && c.hex === selected.hex))) {
+        selected = filtered[0];
+      }
+      renderGrid();
+      renderDetails();
+    }
+
+    el.btnInter.addEventListener('click', () => {
+      mode = 'interleaved';
+      applyModeButtons();
+      renderDetails();
+    });
+    el.btnGroup.addEventListener('click', () => {
+      mode = 'grouped';
+      applyModeButtons();
+      renderDetails();
+    });
+
+    el.search.addEventListener('input', applyFilter);
+    [el.mapR, el.mapG, el.mapB, el.mapW].forEach(inp => {
+      inp.addEventListener('input', renderDetails);
+    });
+
+    el.copyChannel.addEventListener('click', async () => {
+      const text = String(el.channelPattern.textContent || '');
+      if (text && text !== '—') await copyText(text);
+    });
+
+    el.copyNumeric.addEventListener('click', async () => {
+      const text = String(el.numericPattern.textContent || '');
+      if (text && text !== '—') await copyText(text);
+    });
+
+    applyModeButtons();
+    renderGrid();
+    renderDetails();
+    el.count.textContent = `${filtered.length} / ${sortedColors.length} colors`;
+  </script>
+</body>
+</html>
