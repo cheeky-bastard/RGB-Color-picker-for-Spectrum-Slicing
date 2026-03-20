@@ -1,526 +1,802 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RGBW Color Picker (Offline)</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gradient Generator for Full Spectrum Slicing</title>
   <style>
-    :root {
-      --bg: #020617;
-      --panel: rgba(15, 23, 42, 0.6);
-      --panel2: rgba(2, 6, 23, 0.35);
-      --border: #1f2937;
-      --border2: #334155;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --active: #e2e8f0;
+    :root{
+      --bg:#020617;
+      --panel:rgba(15,23,42,0.86);
+      --panel2:rgba(30,41,59,0.72);
+      --border:#1f2937;
+      --muted:#94a3b8;
+      --text:#e2e8f0;
+      --blue:#3b82f6;
+      --blue2:#60a5fa;
+      --shadow:0 12px 36px rgba(0,0,0,0.35);
+      --radius:18px;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background:radial-gradient(circle at top,#0f172a 0%,#020617 58%);
+      color:var(--text);
+      min-height:100vh;
+      padding:28px;
     }
-    .wrap {
-      max-width: 1150px;
-      margin: 0 auto;
-      padding: 22px;
+    .app{max-width:1240px;margin:0 auto;display:grid;gap:20px}
+    .hero{
+      background:linear-gradient(180deg,rgba(30,41,59,0.92),rgba(15,23,42,0.86));
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:24px;
+      box-shadow:var(--shadow);
     }
-    h1 {
-      margin: 0 0 6px 0;
-      font-size: 24px;
-      font-weight: 750;
-      letter-spacing: 0.2px;
+    .title{
+      font-size:clamp(1.6rem,3vw,2.4rem);
+      font-weight:800;
+      letter-spacing:.01em;
+      margin:0;
+      text-align:center;
     }
-    .sub {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 14px;
-      line-height: 1.35;
+    .grid{display:grid;grid-template-columns:460px 1fr;gap:20px}
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
     }
-    .grid {
-      display: grid;
-      gap: 14px;
+    .section-title{
+      font-size:1rem;
+      font-weight:800;
+      margin:0 0 14px 0;
+      letter-spacing:.02em;
     }
-    @media (min-width: 980px) {
-      .grid { grid-template-columns: 420px 1fr; }
+    .label{
+      display:block;
+      color:var(--muted);
+      font-size:.92rem;
+      margin:0 0 6px 0;
+      font-weight:600;
     }
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 14px;
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    .row-1{margin-bottom:12px}
+    .row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+    select,input,textarea,button{font:inherit}
+    select,input[type="number"],input[type="color"],textarea{
+      width:100%;
+      border-radius:14px;
+      border:1px solid #334155;
+      background:#0f172a;
+      color:var(--text);
+      padding:12px 14px;
+      outline:none;
+      transition:border-color .15s ease, box-shadow .15s ease;
     }
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
+    input[type="color"]{padding:6px;min-height:48px;cursor:pointer}
+    select:focus,input[type="number"]:focus,input[type="color"]:focus,textarea:focus{
+      border-color:var(--blue2);
+      box-shadow:0 0 0 3px rgba(96,165,250,.16);
     }
-    .label {
-      font-weight: 650;
-      font-size: 14px;
+    .slot-select{font-size:1.05rem;font-weight:800}
+    .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    button{
+      border:none;border-radius:14px;padding:11px 16px;font-weight:800;cursor:pointer;
+      transition:transform .04s ease, opacity .15s ease, filter .15s ease;
     }
-    input, button {
-      background: rgba(2, 6, 23, 0.5);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 14px;
-      outline: none;
+    button:active{transform:translateY(1px)}
+    .primary{background:var(--blue);color:white}
+    .secondary{background:#1e293b;color:var(--text);border:1px solid #334155}
+    .ghost{background:#0f172a;color:var(--muted);border:1px solid #334155}
+    details{
+      margin-top:14px;background:var(--panel2);border:1px solid var(--border);
+      border-radius:16px;padding:0 14px;overflow:hidden;
     }
-    input:focus {
-      border-color: #64748b;
+    summary{
+      cursor:pointer;list-style:none;padding:14px 0;font-weight:800;color:var(--blue2);user-select:none;
     }
-    button {
-      cursor: pointer;
+    summary::-webkit-details-marker{display:none}
+    .advanced-body{padding:0 0 14px 0}
+    .hint{color:var(--muted);font-size:.9rem;line-height:1.45;margin-top:6px}
+    .stats{
+      display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:16px;
     }
-    button:hover {
-      background: rgba(15, 23, 42, 0.7);
+    .stat{
+      background:rgba(15,23,42,.9);border:1px solid var(--border);border-radius:14px;padding:12px;
     }
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    .stat .k{color:var(--muted);font-size:.8rem;margin-bottom:6px}
+    .stat .v{font-size:1.05rem;font-weight:800;word-break:break-word}
+    .preview-wrap{
+      background:#0f172a;border:1px solid #334155;border-radius:16px;padding:14px;margin-bottom:16px;
     }
-    .muted {
-      color: var(--muted);
-      font-size: 12px;
+    .preview-bar{display:grid;gap:2px;min-height:46px}
+    .preview-cell{
+      min-height:24px;border-radius:6px;border:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden;
     }
-
-    /* Paint-style swatch grid */
-    .paintGrid {
-      display: grid;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 8px;
-      max-height: 620px;
-      overflow: auto;
-      padding-right: 4px;
+    .preview-cell::after{
+      content:attr(data-label);position:absolute;inset:auto 6px 4px auto;font-size:.72rem;
+      color:rgba(255,255,255,.86);font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.5);
     }
-    @media (max-width: 980px) {
-      .paintGrid { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+    .legend{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;color:var(--muted);font-size:.9rem}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;background:rgba(30,41,59,.8);
+      border:1px solid var(--border);padding:7px 10px;border-radius:999px;
     }
-    @media (max-width: 640px) {
-      .paintGrid { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+    .sw{width:14px;height:14px;border-radius:50%;border:1px solid rgba(255,255,255,.25)}
+    .slot-color-card{
+      background:rgba(15,23,42,.9);border:1px solid var(--border);border-radius:14px;padding:10px;
     }
-    .paintSwatch {
-      padding: 0;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: rgba(2, 6, 23, 0.3);
-      aspect-ratio: 1 / 1;
-      position: relative;
+    .slot-color-title{font-size:.86rem;color:var(--muted);margin-bottom:6px;font-weight:700}
+    .mini-swatch{
+      width:100%;height:18px;border-radius:999px;border:1px solid rgba(255,255,255,.18);margin-top:8px;
     }
-    .paintSwatch:hover {
-      border-color: #64748b;
+    textarea{
+      min-height:240px;resize:vertical;line-height:1.45;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.95rem;
     }
-    .paintSwatch.active {
-      border-color: var(--active);
-      box-shadow: 0 0 0 2px rgba(226,232,240,.22);
+    .mini{color:var(--muted);font-size:.85rem;margin-top:8px;line-height:1.45}
+    .warning{
+      margin-top:12px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);
+      color:#fcd34d;border-radius:14px;padding:12px 14px;font-size:.92rem;line-height:1.45;
     }
-    .paintColor {
-      width: 100%;
-      height: 100%;
-      border-radius: 9px;
-      border: 1px solid rgba(51, 65, 85, 0.65);
+    .footer-note,.credit{color:var(--muted);font-size:.9rem;margin-top:8px}
+    .credit{text-align:center;font-size:.88rem;padding:4px 0 0 0}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    @media (max-width: 1020px){
+      .grid{grid-template-columns:1fr}
+      .stats{grid-template-columns:1fr 1fr}
     }
-    .tooltip {
-      position: absolute;
-      left: 50%;
-      top: -8px;
-      transform: translate(-50%, -100%);
-      background: rgba(2, 6, 23, 0.92);
-      border: 1px solid var(--border2);
-      color: var(--text);
-      padding: 6px 8px;
-      border-radius: 10px;
-      font-size: 12px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 120ms ease;
-      z-index: 5;
-    }
-    .paintSwatch:hover .tooltip {
-      opacity: 1;
-    }
-
-    /* Right side detail */
-    .bigSwatch {
-      width: 44px;
-      height: 44px;
-      border-radius: 16px;
-      border: 1px solid var(--border2);
-      flex: 0 0 auto;
-    }
-    .pillRow {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    .pill {
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(2, 6, 23, 0.35);
-      font-size: 13px;
-    }
-    .pill.active {
-      border-color: #94a3b8;
-      background: rgba(30, 41, 59, 0.55);
-    }
-
-    .mapGrid {
-      display: grid;
-      gap: 10px;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-    @media (max-width: 640px) {
-      .mapGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    .mapBox {
-      padding: 10px 12px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: var(--panel2);
-    }
-    .mapBox .muted { display:block; }
-    .mapBox input {
-      width: 100%;
-      border: none;
-      padding: 6px 0 0 0;
-      background: transparent;
-      font-size: 18px;
-      font-weight: 750;
-      border-radius: 0;
-    }
-    .box {
-      padding: 14px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
-      background: var(--panel2);
-    }
-    .box .mono {
-      margin-top: 8px;
-      line-height: 1.6;
-      word-break: break-word;
-      font-size: 13px;
+    @media (max-width: 720px){
+      body{padding:14px}
+      .row,.row-4{grid-template-columns:1fr}
+      .stats{grid-template-columns:1fr}
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>RGBW Color Picker (Offline)</h1>
-    <div class="sub">
-      Click a swatch to see its minimized RGBW channel pattern and a numeric pattern based on your channel IDs (R/G/B/W).
-      Works offline—single HTML file.
-    </div>
+  <div class="app">
+    <section class="hero">
+      <h1 class="title">Gradient Generator for Full Spectrum Slicing</h1>
+    </section>
 
-    <div class="grid">
+    <section class="grid">
       <div class="card">
-        <div class="row" style="margin-bottom: 10px;">
-          <div class="label">Colors</div>
-          <input id="search" placeholder="Search name or hex…" />
-        </div>
-        <div class="muted" id="count" style="margin-bottom: 10px;"></div>
-        <div class="paintGrid" id="swatchGrid"></div>
-      </div>
+        <h2 class="section-title">Gradient Inputs</h2>
 
-      <div class="card">
         <div class="row">
-          <div style="display:flex; gap:12px; align-items:center;">
-            <div class="bigSwatch" id="bigSwatch"></div>
-            <div>
-              <div id="selName" style="font-size:18px; font-weight:800;">—</div>
-              <div class="muted" id="selMeta">—</div>
+          <div>
+            <label class="label" for="startSlot">Start Slot</label>
+            <select id="startSlot" class="slot-select">
+              <option value="1">Slot 1</option>
+              <option value="2">Slot 2</option>
+              <option value="3">Slot 3</option>
+              <option value="4">Slot 4</option>
+            </select>
+          </div>
+          <div>
+            <label class="label" for="endSlot">End Slot</label>
+            <select id="endSlot" class="slot-select">
+              <option value="1">Slot 1</option>
+              <option value="2" selected>Slot 2</option>
+              <option value="3">Slot 3</option>
+              <option value="4">Slot 4</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row-1">
+          <label class="label" for="layerCount">Layer Count</label>
+          <input id="layerCount" type="number" min="2" step="1" value="499" />
+          <div class="hint">
+            Used as the base output length before applying density. At 1×, output length equals layer count.
+          </div>
+        </div>
+
+        <details open>
+          <summary>Slot Colors for Preview</summary>
+          <div class="advanced-body">
+            <div class="row-4">
+              <div class="slot-color-card">
+                <div class="slot-color-title">Slot 1</div>
+                <input id="slotColor1" type="color" value="#00d5df" />
+                <div class="mini-swatch" id="slotSwatch1"></div>
+              </div>
+              <div class="slot-color-card">
+                <div class="slot-color-title">Slot 2</div>
+                <input id="slotColor2" type="color" value="#ff00ff" />
+                <div class="mini-swatch" id="slotSwatch2"></div>
+              </div>
+              <div class="slot-color-card">
+                <div class="slot-color-title">Slot 3</div>
+                <input id="slotColor3" type="color" value="#ffee33" />
+                <div class="mini-swatch" id="slotSwatch3"></div>
+              </div>
+              <div class="slot-color-card">
+                <div class="slot-color-title">Slot 4</div>
+                <input id="slotColor4" type="color" value="#ffffff" />
+                <div class="mini-swatch" id="slotSwatch4"></div>
+              </div>
+            </div>
+            <div class="hint">
+              These colors only affect the preview in this prototype. They do not change the generated numeric pattern.
             </div>
           </div>
-          <div class="pillRow">
-            <button class="pill active" id="btnInterleaved" type="button">Interleaved</button>
-            <button class="pill" id="btnGrouped" type="button">Grouped</button>
-          </div>
-        </div>
+        </details>
 
-        <div style="height: 12px;"></div>
-
-        
-        <div style="margin-bottom: 8px; text-align: center; font-weight: 800; color: #3b82f6; font-size: 15px;">
-          Spool Slot Location Mapping
-        </div>
-<div class="mapGrid">
-          <div class="mapBox">
-            <span class="muted">R =</span>
-            <input id="mapR" inputmode="numeric" value="1" />
-          </div>
-          <div class="mapBox">
-            <span class="muted">G =</span>
-            <input id="mapG" inputmode="numeric" value="2" />
-          </div>
-          <div class="mapBox">
-            <span class="muted">B =</span>
-            <input id="mapB" inputmode="numeric" value="3" />
-          </div>
-          <div class="mapBox">
-            <span class="muted">W =</span>
-            <input id="mapW" inputmode="numeric" value="4" />
-          </div>
-        </div>
-
-        <div style="height: 12px;"></div>
-
-        <div class="box">
-          <div class="muted">Channel pattern</div>
-          <div class="mono" id="channelPattern">—</div>
-          <div style="height: 10px;"></div>
-          <button id="copyChannel" type="button">Copy channel pattern</button>
-        </div>
-
-        <div style="height: 12px;"></div>
-
-        <div class="box">
-          <div class="row">
-            <div style="flex:1; min-width:0;">
-              <div class="muted">Numeric pattern</div>
-              <div class="mono" id="numericPattern">—</div>
+        <details open>
+          <summary>Advanced Options</summary>
+          <div class="advanced-body">
+            <div class="row">
+              <div>
+                <label class="label" for="density">Pattern Density Multiplier</label>
+                <select id="density">
+                  <option value="0.25">0.25×</option>
+                  <option value="0.5">0.5×</option>
+                  <option value="0.75">0.75×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="2">2×</option>
+                  <option value="3">3×</option>
+                  <option value="4">4×</option>
+                </select>
+              </div>
+              <div>
+                <label class="label" for="smoothnessMode">Smoothness Mode</label>
+                <select id="smoothnessMode">
+                  <option value="linear" selected>Linear</option>
+                  <option value="soft">Linear + Soft Anti-Clump</option>
+                  <option value="medium">Linear + Medium Anti-Clump</option>
+                </select>
+                <div class="hint">
+                  Linear preserves the strongest gradient direction. Anti-clump modes lightly break up long runs without turning noisy.
+                </div>
+              </div>
             </div>
-            <button id="copyNumeric" type="button">Copy</button>
+
+            <div class="row">
+              <div>
+                <label class="label" for="patternShape">Pattern Shape</label>
+                <select id="patternShape">
+                  <option value="linear" selected>Start → End</option>
+                  <option value="boomerang">Boomerang (Start → End → Start)</option>
+                </select>
+                <div class="hint">
+                  Boomerang creates a full wave that ramps from the start slot to the end slot, then back to the start slot.
+                </div>
+              </div>
+              <div>
+                <label class="label" for="waveType">Wave Type</label>
+                <select id="waveType">
+                  <option value="linear" selected>Linear</option>
+                  <option value="sine">Sine</option>
+                  <option value="ease">Ease In/Out</option>
+                </select>
+                <div class="hint">
+                  Controls how the blend changes over the pattern. Sine and Ease make boomerang waves feel less mechanical.
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label class="label" for="waveMixFloor">Boomerang Solid Limit</label>
+                <select id="waveMixFloor">
+                  <option value="0">Off (allow full solids)</option>
+                  <option value="0.08" selected>Light wave</option>
+                  <option value="0.15">Medium wave</option>
+                  <option value="0.22">Strong wave</option>
+                </select>
+                <div class="hint">
+                  Only used in Boomerang mode. This limits fully solid sections so the output stays more wave-like.
+                </div>
+              </div>
+              <div>
+                <div class="hint" style="margin-top:28px;">
+                  Preview now samples the actual generated pattern rather than showing only an idealized color blend.
+                </div>
+              </div>
+            </div>
           </div>
+        </details>
+
+        <div class="btns">
+          <button class="primary" id="generateBtn">Generate Gradient Pattern</button>
+          <button class="secondary" id="swapBtn">Swap Start / End</button>
+          <button class="ghost" id="resetBtn">Reset Defaults</button>
         </div>
 
-        <div style="height: 10px;"></div>
-        <div class="muted">Tip: change R/G/B/W numbers to match your controller channel IDs.</div>
+        <div class="warning">
+          Good starting combos: Linear shape + Linear wave for classic gradients, or Boomerang + Sine + Light wave for smoother repeated wave transitions.
+        </div>
       </div>
-    </div>
+
+      <div class="card">
+        <h2 class="section-title">Generated Output</h2>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="k">Route</div>
+            <div class="v" id="statRoute">1 → 2</div>
+          </div>
+          <div class="stat">
+            <div class="k">Layer Count</div>
+            <div class="v" id="statLayers">499</div>
+          </div>
+          <div class="stat">
+            <div class="k">Density</div>
+            <div class="v" id="statDensity">1×</div>
+          </div>
+          <div class="stat">
+            <div class="k">Shape</div>
+            <div class="v" id="statShape">Start → End</div>
+          </div>
+          <div class="stat">
+            <div class="k">Wave Type</div>
+            <div class="v" id="statWaveType">Linear</div>
+          </div>
+          <div class="stat">
+            <div class="k">Smoothness</div>
+            <div class="v" id="statSmoothness">Linear</div>
+          </div>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="label">Pattern-Sampled Preview</div>
+          <div id="previewBar" class="preview-bar"></div>
+          <div class="legend">
+            <span class="chip"><span class="sw" id="legendSwA"></span><span id="legendA">Start Slot</span></span>
+            <span class="chip"><span class="sw" id="legendSwB"></span><span id="legendB">End Slot</span></span>
+            <span class="chip">Entries: <span id="statTotalEntries">499</span></span>
+          </div>
+          <div class="mini">
+            This preview samples the actual generated slot pattern and colors each preview block from the real output, so it better reflects what the slicer will consume.
+          </div>
+        </div>
+
+        <label class="label" for="output">Slicer Pattern Output</label>
+        <textarea id="output" spellcheck="false"></textarea>
+
+        <div class="btns">
+          <button class="primary" id="copyBtn">Copy Output</button>
+          <button class="secondary" id="downloadBtn">Download TXT</button>
+        </div>
+
+        <div class="footer-note" id="footerNote">Ready.</div>
+      </div>
+    </section>
+
+    <div class="credit">Idea inspiration credit: zklein12345</div>
   </div>
 
-  <script type="application/json" id="colors-data">[{"name": "Color 001", "hex": "#A62929", "ratio_min": "11:0:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 002", "hex": "#BF2626", "ratio_min": "1:0:0:0", "pattern_grouped_min": "R", "pattern_interleaved_min": "R"}, {"name": "Color 003", "hex": "#F08080", "ratio_min": "3:0:0:1", "pattern_grouped_min": "R:R:R:W", "pattern_interleaved_min": "R:W:R:R"}, {"name": "Color 004", "hex": "#ED6363", "ratio_min": "5:0:0:1", "pattern_grouped_min": "R:R:R:R:R:W", "pattern_interleaved_min": "R:W:R:R:R:R"}, {"name": "Color 005", "hex": "#FFC2C2", "ratio_min": "1:0:0:1", "pattern_grouped_min": "R:W", "pattern_interleaved_min": "R:W"}, {"name": "Color 006", "hex": "#FFCCCC", "ratio_min": "5:0:0:7", "pattern_grouped_min": "R:R:R:R:R:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:W:R:W:R:W:R:W:R:W:W:W"}, {"name": "Color 007", "hex": "#FA8073", "ratio_min": "9:1:0:2", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:G:W:W", "pattern_interleaved_min": "R:G:W:R:W:R:R:R:R:R:R:R"}, {"name": "Color 008", "hex": "#FFE3E0", "ratio_min": "1:0:0:3", "pattern_grouped_min": "R:W:W:W", "pattern_interleaved_min": "R:W:W:W"}, {"name": "Color 009", "hex": "#FF5433", "ratio_min": "11:1:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 010", "hex": "#FF6347", "ratio_min": "10:1:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:G:W", "pattern_interleaved_min": "R:G:W:R:R:R:R:R:R:R:R:R"}, {"name": "Color 011", "hex": "#FFA17A", "ratio_min": "4:1:0:1", "pattern_grouped_min": "R:R:R:R:G:W", "pattern_interleaved_min": "R:G:W:R:R:R"}, {"name": "Color 012", "hex": "#F77530", "ratio_min": "5:1:0:0", "pattern_grouped_min": "R:R:R:R:R:G", "pattern_interleaved_min": "R:G:R:R:R:R"}, {"name": "Color 013", "hex": "#FFE8D6", "ratio_min": "4:1:0:7", "pattern_grouped_min": "R:R:R:R:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:W:R:W:R:W:W:W:W"}, {"name": "Color 014", "hex": "#FFD49C", "ratio_min": "2:1:0:1", "pattern_grouped_min": "R:R:G:W", "pattern_interleaved_min": "R:G:W:R"}, {"name": "Color 015", "hex": "#FFF0DB", "ratio_min": "3:2:0:7", "pattern_grouped_min": "R:R:R:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:W:W:W:W:W"}, {"name": "Color 016", "hex": "#FFA600", "ratio_min": "3:1:0:0", "pattern_grouped_min": "R:R:R:G", "pattern_interleaved_min": "R:G:R:R"}, {"name": "Color 017", "hex": "#FFE8BA", "ratio_min": "5:3:0:4", "pattern_grouped_min": "R:R:R:R:R:G:G:G:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:W:R"}, {"name": "Color 018", "hex": "#FFB00F", "ratio_min": "2:1:0:0", "pattern_grouped_min": "R:R:G", "pattern_interleaved_min": "R:G:R"}, {"name": "Color 019", "hex": "#EDCC61", "ratio_min": "7:4:0:1", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:R:R:R"}, {"name": "Color 020", "hex": "#E6BD3B", "ratio_min": "7:5:0:0", "pattern_grouped_min": "R:R:R:R:R:R:R:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:R:R"}, {"name": "Color 021", "hex": "#FFF2B5", "ratio_min": "1:1:0:1", "pattern_grouped_min": "R:G:W", "pattern_interleaved_min": "R:G:W"}, {"name": "Color 022", "hex": "#FFED8C", "ratio_min": "3:2:0:1", "pattern_grouped_min": "R:R:R:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R"}, {"name": "Color 023", "hex": "#F0E68C", "ratio_min": "5:5:0:2", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:R:G:R:G"}, {"name": "Color 024", "hex": "#FAED5C", "ratio_min": "6:5:0:1", "pattern_grouped_min": "R:R:R:R:R:R:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:R:G:R"}, {"name": "Color 025", "hex": "#FFFACC", "ratio_min": "4:3:0:5", "pattern_grouped_min": "R:R:R:R:G:G:G:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:W:W"}, {"name": "Color 026", "hex": "#FFFCCF", "ratio_min": "1:1:0:2", "pattern_grouped_min": "R:G:W:W", "pattern_interleaved_min": "R:G:W:W"}, {"name": "Color 027", "hex": "#EDED00", "ratio_min": "1:1:0:0", "pattern_grouped_min": "R:G", "pattern_interleaved_min": "R:G"}, {"name": "Color 028", "hex": "#FFFFAB", "ratio_min": "5:4:0:3", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:G:R"}, {"name": "Color 029", "hex": "#F5F775", "ratio_min": "5:6:0:1", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:R:G:G"}, {"name": "Color 030", "hex": "#D1E330", "ratio_min": "5:7:0:0", "pattern_grouped_min": "R:R:R:R:R:G:G:G:G:G:G:G", "pattern_interleaved_min": "R:G:R:G:R:G:R:G:R:G:G:G"}, {"name": "Color 031", "hex": "#ABDE00", "ratio_min": "1:2:0:0", "pattern_grouped_min": "R:G:G", "pattern_interleaved_min": "R:G:G"}, {"name": "Color 032", "hex": "#D4ED91", "ratio_min": "4:5:0:3", "pattern_grouped_min": "R:R:R:R:G:G:G:G:G:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:R:G:W:R:G:G"}, {"name": "Color 033", "hex": "#BFE654", "ratio_min": "4:7:0:1", "pattern_grouped_min": "R:R:R:R:G:G:G:G:G:G:G:W", "pattern_interleaved_min": "R:G:W:R:G:R:G:R:G:G:G:G"}, {"name": "Color 034", "hex": "#E8F2D4", "ratio_min": "2:3:0:7", "pattern_grouped_min": "R:R:G:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:G:W:R:G:W:G:W:W:W:W:W"}, {"name": "Color 035", "hex": "#DEFFA6", "ratio_min": "1:2:0:1", "pattern_grouped_min": "R:G:G:W", "pattern_interleaved_min": "R:G:W:G"}, {"name": "Color 036", "hex": "#ADFF2E", "ratio_min": "1:3:0:0", "pattern_grouped_min": "R:G:G:G", "pattern_interleaved_min": "R:G:G:G"}, {"name": "Color 037", "hex": "#75ED00", "ratio_min": "1:5:0:0", "pattern_grouped_min": "R:G:G:G:G:G", "pattern_interleaved_min": "R:G:G:G:G:G"}, {"name": "Color 038", "hex": "#B5EDB5", "ratio_min": "0:5:0:7", "pattern_grouped_min": "G:G:G:G:G:W:W:W:W:W:W:W", "pattern_interleaved_min": "G:W:G:W:G:W:G:W:G:W:W:W"}, {"name": "Color 039", "hex": "#8FED8F", "ratio_min": "0:2:0:1", "pattern_grouped_min": "G:G:W", "pattern_interleaved_min": "G:W:G"}, {"name": "Color 040", "hex": "#00FF00", "ratio_min": "0:1:0:0", "pattern_grouped_min": "G", "pattern_interleaved_min": "G"}, {"name": "Color 041", "hex": "#66FF66", "ratio_min": "0:5:0:1", "pattern_grouped_min": "G:G:G:G:G:W", "pattern_interleaved_min": "G:W:G:G:G:G"}, {"name": "Color 042", "hex": "#C2FFC2", "ratio_min": "0:1:0:1", "pattern_grouped_min": "G:W", "pattern_interleaved_min": "G:W"}, {"name": "Color 043", "hex": "#F0FFF0", "ratio_min": "0:1:0:5", "pattern_grouped_min": "G:W:W:W:W:W", "pattern_interleaved_min": "G:W:W:W:W:W"}, {"name": "Color 044", "hex": "#54FF9E", "ratio_min": "0:9:2:1", "pattern_grouped_min": "G:G:G:G:G:G:G:G:G:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:G:G:G:G:G:G"}, {"name": "Color 045", "hex": "#D1FAED", "ratio_min": "0:3:2:7", "pattern_grouped_min": "G:G:G:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:W:W:W:W:W"}, {"name": "Color 046", "hex": "#4AE8BD", "ratio_min": "0:7:4:1", "pattern_grouped_min": "G:G:G:G:G:G:G:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:G:G:G"}, {"name": "Color 047", "hex": "#0FDEB0", "ratio_min": "0:2:1:0", "pattern_grouped_min": "G:G:B", "pattern_interleaved_min": "G:B:G"}, {"name": "Color 048", "hex": "#A3DBD1", "ratio_min": "0:4:3:5", "pattern_grouped_min": "G:G:G:G:B:B:B:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:W:G:W:W"}, {"name": "Color 049", "hex": "#00FFCC", "ratio_min": "0:7:5:0", "pattern_grouped_min": "G:G:G:G:G:G:G:B:B:B:B:B", "pattern_interleaved_min": "G:B:G:B:G:B:G:B:G:B:G:G"}, {"name": "Color 050", "hex": "#D9F5F0", "ratio_min": "0:1:1:4", "pattern_grouped_min": "G:B:W:W:W:W", "pattern_interleaved_min": "G:B:W:W:W:W"}, {"name": "Color 051", "hex": "#40E0D1", "ratio_min": "0:6:5:1", "pattern_grouped_min": "G:G:G:G:G:G:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:G:B:G"}, {"name": "Color 052", "hex": "#8FFFFA", "ratio_min": "0:5:5:2", "pattern_grouped_min": "G:G:G:G:G:B:B:B:B:B:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:G:B:G:B"}, {"name": "Color 053", "hex": "#38FCFC", "ratio_min": "0:1:1:0", "pattern_grouped_min": "G:B", "pattern_interleaved_min": "G:B"}, {"name": "Color 054", "hex": "#BAFFFF", "ratio_min": "0:1:1:1", "pattern_grouped_min": "G:B:W", "pattern_interleaved_min": "G:B:W"}, {"name": "Color 055", "hex": "#66E6ED", "ratio_min": "0:5:6:1", "pattern_grouped_min": "G:G:G:G:G:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:G:B:B"}, {"name": "Color 056", "hex": "#63D1F5", "ratio_min": "0:4:7:1", "pattern_grouped_min": "G:G:G:G:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:G:B:B:B:B"}, {"name": "Color 057", "hex": "#BFF0FF", "ratio_min": "0:3:4:5", "pattern_grouped_min": "G:G:G:B:B:B:B:W:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:W:B:W:W"}, {"name": "Color 058", "hex": "#0AB5FF", "ratio_min": "0:1:2:0", "pattern_grouped_min": "G:B:B", "pattern_interleaved_min": "G:B:B"}, {"name": "Color 059", "hex": "#A3D4ED", "ratio_min": "0:3:5:4", "pattern_grouped_min": "G:G:G:B:B:B:B:B:W:W:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:W:B:W:B"}, {"name": "Color 060", "hex": "#82CFFC", "ratio_min": "0:3:7:2", "pattern_grouped_min": "G:G:G:B:B:B:B:B:B:B:W:W", "pattern_interleaved_min": "G:B:W:G:B:W:G:B:B:B:B:B"}, {"name": "Color 061", "hex": "#87CFFA", "ratio_min": "0:2:3:1", "pattern_grouped_min": "G:G:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:B"}, {"name": "Color 062", "hex": "#63B8FF", "ratio_min": "0:3:8:1", "pattern_grouped_min": "G:G:G:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:G:B:B:B:B:B:B"}, {"name": "Color 063", "hex": "#0080FF", "ratio_min": "0:1:5:0", "pattern_grouped_min": "G:B:B:B:B:B", "pattern_interleaved_min": "G:B:B:B:B:B"}, {"name": "Color 064", "hex": "#C7E3FF", "ratio_min": "0:1:2:3", "pattern_grouped_min": "G:B:B:W:W:W", "pattern_interleaved_min": "G:B:W:B:W:W"}, {"name": "Color 065", "hex": "#7DB5FF", "ratio_min": "0:1:4:1", "pattern_grouped_min": "G:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:B:B:B"}, {"name": "Color 066", "hex": "#5C8FF5", "ratio_min": "0:2:9:1", "pattern_grouped_min": "G:G:B:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "G:B:W:G:B:B:B:B:B:B:B:B"}, {"name": "Color 067", "hex": "#1463F5", "ratio_min": "0:1:11:0", "pattern_grouped_min": "G:B:B:B:B:B:B:B:B:B:B:B", "pattern_interleaved_min": "G:B:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 068", "hex": "#E6E6FA", "ratio_min": "0:0:1:5", "pattern_grouped_min": "B:W:W:W:W:W", "pattern_interleaved_min": "B:W:W:W:W:W"}, {"name": "Color 069", "hex": "#0000FF", "ratio_min": "0:0:1:0", "pattern_grouped_min": "B", "pattern_interleaved_min": "B"}, {"name": "Color 070", "hex": "#4C4CFF", "ratio_min": "0:0:11:1", "pattern_grouped_min": "B:B:B:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "B:W:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 071", "hex": "#ABABFF", "ratio_min": "0:0:7:5", "pattern_grouped_min": "B:B:B:B:B:B:B:W:W:W:W:W", "pattern_interleaved_min": "B:W:B:W:B:W:B:W:B:W:B:B"}, {"name": "Color 072", "hex": "#CCCCFF", "ratio_min": "0:0:5:7", "pattern_grouped_min": "B:B:B:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "B:W:B:W:B:W:B:W:B:W:W:W"}, {"name": "Color 073", "hex": "#F7F7FF", "ratio_min": "0:0:1:11", "pattern_grouped_min": "B:W:W:W:W:W:W:W:W:W:W:W", "pattern_interleaved_min": "B:W:W:W:W:W:W:W:W:W:W:W"}, {"name": "Color 074", "hex": "#AB82FF", "ratio_min": "1:0:4:1", "pattern_grouped_min": "R:B:B:B:B:W", "pattern_interleaved_min": "R:B:W:B:B:B"}, {"name": "Color 075", "hex": "#6600FF", "ratio_min": "1:0:11:0", "pattern_grouped_min": "R:B:B:B:B:B:B:B:B:B:B:B", "pattern_interleaved_min": "R:B:B:B:B:B:B:B:B:B:B:B"}, {"name": "Color 076", "hex": "#8000FF", "ratio_min": "1:0:5:0", "pattern_grouped_min": "R:B:B:B:B:B", "pattern_interleaved_min": "R:B:B:B:B:B"}, {"name": "Color 077", "hex": "#9C30FF", "ratio_min": "1:0:3:0", "pattern_grouped_min": "R:B:B:B", "pattern_interleaved_min": "R:B:B:B"}, {"name": "Color 078", "hex": "#BF5EFF", "ratio_min": "3:0:8:1", "pattern_grouped_min": "R:R:R:B:B:B:B:B:B:B:B:W", "pattern_interleaved_min": "R:B:W:R:B:R:B:B:B:B:B:B"}, {"name": "Color 079", "hex": "#9933CC", "ratio_min": "1:0:2:0", "pattern_grouped_min": "R:B:B", "pattern_interleaved_min": "R:B:B"}, {"name": "Color 080", "hex": "#CC00FF", "ratio_min": "5:0:7:0", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:B:B", "pattern_interleaved_min": "R:B:R:B:R:B:R:B:R:B:B:B"}, {"name": "Color 081", "hex": "#E066FF", "ratio_min": "5:0:6:1", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:B:W", "pattern_interleaved_min": "R:B:W:R:B:R:B:R:B:R:B:B"}, {"name": "Color 082", "hex": "#DEA1DE", "ratio_min": "1:0:1:1", "pattern_grouped_min": "R:B:W", "pattern_interleaved_min": "R:B:W"}, {"name": "Color 083", "hex": "#DB70DB", "ratio_min": "5:0:5:2", "pattern_grouped_min": "R:R:R:R:R:B:B:B:B:B:W:W", "pattern_interleaved_min": "R:B:W:R:B:W:R:B:R:B:R:B"}, {"name": "Color 084", "hex": "#CC00CC", "ratio_min": "1:0:1:0", "pattern_grouped_min": "R:B", "pattern_interleaved_min": "R:B"}, {"name": "Color 085", "hex": "#FFE0FF", "ratio_min": "3:0:2:7", "pattern_grouped_min": "R:R:R:B:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:B:W:R:B:W:R:W:W:W:W:W"}, {"name": "Color 086", "hex": "#FF00CC", "ratio_min": "7:0:5:0", "pattern_grouped_min": "R:R:R:R:R:R:R:B:B:B:B:B", "pattern_interleaved_min": "R:B:R:B:R:B:R:B:R:B:R:R"}, {"name": "Color 087", "hex": "#FF00AB", "ratio_min": "3:0:1:0", "pattern_grouped_min": "R:R:R:B", "pattern_interleaved_min": "R:B:R:R"}, {"name": "Color 088", "hex": "#FF33B2", "ratio_min": "2:0:1:0", "pattern_grouped_min": "R:R:B", "pattern_interleaved_min": "R:B:R"}, {"name": "Color 089", "hex": "#FF69B5", "ratio_min": "8:0:3:1", "pattern_grouped_min": "R:R:R:R:R:R:R:R:B:B:B:W", "pattern_interleaved_min": "R:B:W:R:B:R:B:R:R:R:R:R"}, {"name": "Color 090", "hex": "#FF0066", "ratio_min": "11:0:1:0", "pattern_grouped_min": "R:R:R:R:R:R:R:R:R:R:R:B", "pattern_interleaved_min": "R:B:R:R:R:R:R:R:R:R:R:R"}, {"name": "Color 091", "hex": "#F5CCD9", "ratio_min": "4:0:1:7", "pattern_grouped_min": "R:R:R:R:B:W:W:W:W:W:W:W", "pattern_interleaved_min": "R:B:W:R:W:R:W:R:W:W:W:W"}, {"name": "Color 092", "hex": "#FF82AB", "ratio_min": "4:0:1:1", "pattern_grouped_min": "R:R:R:R:B:W", "pattern_interleaved_min": "R:B:W:R:R:R"}, {"name": "Color 093", "hex": "#FFF0F5", "ratio_min": "1:0:0:5", "pattern_grouped_min": "R:W:W:W:W:W", "pattern_interleaved_min": "R:W:W:W:W:W"}, {"name": "Color 094", "hex": "#FFB5C4", "ratio_min": "6:0:1:5", "pattern_grouped_min": "R:R:R:R:R:R:B:W:W:W:W:W", "pattern_interleaved_min": "R:B:W:R:W:R:W:R:W:R:W:R"}]</script>
-
   <script>
-    const COLORS = JSON.parse(document.getElementById('colors-data').textContent);
-
-    function normalizeHex(hex) {
-      const h = String(hex || '').trim();
-      if (!h) return '';
-      return h.startsWith('#') ? h : ('#' + h);
-    }
-    function isValidHex(hex) {
-      return /^#([0-9a-fA-F]{6})$/.test(hex);
-    }
-
-    function hexToRgb(hex) {
-      const h = normalizeHex(hex);
-      if (!isValidHex(h)) return null;
-      const v = h.slice(1);
-      const r = parseInt(v.slice(0,2), 16);
-      const g = parseInt(v.slice(2,4), 16);
-      const b = parseInt(v.slice(4,6), 16);
-      return {r,g,b};
-    }
-
-    function rgbToHsv(r,g,b) {
-      r /= 255; g /= 255; b /= 255;
-      const max = Math.max(r,g,b), min = Math.min(r,g,b);
-      const d = max - min;
-      let h = 0;
-      if (d !== 0) {
-        if (max === r) h = ((g - b) / d) % 6;
-        else if (max === g) h = (b - r) / d + 2;
-        else h = (r - g) / d + 4;
-        h *= 60;
-        if (h < 0) h += 360;
-      }
-      const s = max === 0 ? 0 : d / max;
-      const v = max;
-      return {h, s, v};
-    }
-
-    const sortedColors = COLORS.slice().sort((a,b) => {
-      const ra = hexToRgb(a.hex);
-      const rb = hexToRgb(b.hex);
-      if (!ra && !rb) return 0;
-      if (!ra) return 1;
-      if (!rb) return -1;
-      const ha = rgbToHsv(ra.r,ra.g,ra.b);
-      const hb = rgbToHsv(rb.r,rb.g,rb.b);
-      if (ha.h !== hb.h) return ha.h - hb.h;
-      if (ha.s !== hb.s) return ha.s - hb.s;
-      return ha.v - hb.v;
-    });
-
-    let mode = 'interleaved';
-    let filtered = sortedColors;
-    let selected = filtered[0] || null;
-
-    const el = {
-      search: document.getElementById('search'),
-      count: document.getElementById('count'),
-      grid: document.getElementById('swatchGrid'),
-      bigSwatch: document.getElementById('bigSwatch'),
-      selName: document.getElementById('selName'),
-      selMeta: document.getElementById('selMeta'),
-      btnInter: document.getElementById('btnInterleaved'),
-      btnGroup: document.getElementById('btnGrouped'),
-      mapR: document.getElementById('mapR'),
-      mapG: document.getElementById('mapG'),
-      mapB: document.getElementById('mapB'),
-      mapW: document.getElementById('mapW'),
-      channelPattern: document.getElementById('channelPattern'),
-      numericPattern: document.getElementById('numericPattern'),
-      copyChannel: document.getElementById('copyChannel'),
-      copyNumeric: document.getElementById('copyNumeric'),
+    const els = {
+      startSlot: document.getElementById('startSlot'),
+      endSlot: document.getElementById('endSlot'),
+      layerCount: document.getElementById('layerCount'),
+      density: document.getElementById('density'),
+      patternShape: document.getElementById('patternShape'),
+      waveType: document.getElementById('waveType'),
+      waveMixFloor: document.getElementById('waveMixFloor'),
+      smoothnessMode: document.getElementById('smoothnessMode'),
+      generateBtn: document.getElementById('generateBtn'),
+      swapBtn: document.getElementById('swapBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      output: document.getElementById('output'),
+      copyBtn: document.getElementById('copyBtn'),
+      downloadBtn: document.getElementById('downloadBtn'),
+      previewBar: document.getElementById('previewBar'),
+      statRoute: document.getElementById('statRoute'),
+      statLayers: document.getElementById('statLayers'),
+      statDensity: document.getElementById('statDensity'),
+      statShape: document.getElementById('statShape'),
+      statWaveType: document.getElementById('statWaveType'),
+      statSmoothness: document.getElementById('statSmoothness'),
+      statTotalEntries: document.getElementById('statTotalEntries'),
+      footerNote: document.getElementById('footerNote'),
+      legendSwA: document.getElementById('legendSwA'),
+      legendSwB: document.getElementById('legendSwB'),
+      legendA: document.getElementById('legendA'),
+      legendB: document.getElementById('legendB'),
+      slotColor1: document.getElementById('slotColor1'),
+      slotColor2: document.getElementById('slotColor2'),
+      slotColor3: document.getElementById('slotColor3'),
+      slotColor4: document.getElementById('slotColor4'),
+      slotSwatch1: document.getElementById('slotSwatch1'),
+      slotSwatch2: document.getElementById('slotSwatch2'),
+      slotSwatch3: document.getElementById('slotSwatch3'),
+      slotSwatch4: document.getElementById('slotSwatch4'),
     };
 
-    function getPatternFor(c) {
-      if (!c) return '';
-      return mode === 'grouped' ? (c.pattern_grouped_min || '') : (c.pattern_interleaved_min || '');
+    const STORAGE_KEY = 'offline-palette-gradient-prototype-v8';
+
+    function clampInt(v, min, max){
+      const n = Number(v);
+      if (!Number.isFinite(n)) return min;
+      return Math.max(min, Math.min(max, Math.round(n)));
     }
 
-    function parsePattern(pattern) {
-      return String(pattern || '')
-        .split(':')
-        .map(t => t.trim().toUpperCase())
-        .filter(Boolean);
+    function clampNum(v, min, max){
+      const n = Number(v);
+      if (!Number.isFinite(n)) return min;
+      return Math.max(min, Math.min(max, n));
     }
 
-    function getMap() {
+    function lerp(a, b, t){
+      return a + (b - a) * t;
+    }
+
+    function hexToRgb(hex){
+      const clean = String(hex || '').replace('#','');
       return {
-        R: String(el.mapR.value || '').trim(),
-        G: String(el.mapG.value || '').trim(),
-        B: String(el.mapB.value || '').trim(),
-        W: String(el.mapW.value || '').trim(),
+        r: parseInt(clean.slice(0,2),16),
+        g: parseInt(clean.slice(2,4),16),
+        b: parseInt(clean.slice(4,6),16)
       };
     }
 
-    function toNumeric(tokens, map) {
-      return tokens.map(t => (map[t] != null && map[t] !== '' ? map[t] : '?'));
+    function rgbToCss({r,g,b}){
+      return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
     }
 
-    async function copyText(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-      } catch (e) {
-        const ta = document.createElement('textarea');
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
+    function mixCss(c1, c2, t){
+      const a = hexToRgb(c1);
+      const b = hexToRgb(c2);
+      return rgbToCss({
+        r: lerp(a.r, b.r, t),
+        g: lerp(a.g, b.g, t),
+        b: lerp(a.b, b.b, t)
+      });
+    }
+
+    function getSlotColors(){
+      return {
+        1: els.slotColor1.value,
+        2: els.slotColor2.value,
+        3: els.slotColor3.value,
+        4: els.slotColor4.value,
+      };
+    }
+
+    function updateSlotSwatches(){
+      els.slotSwatch1.style.background = els.slotColor1.value;
+      els.slotSwatch2.style.background = els.slotColor2.value;
+      els.slotSwatch3.style.background = els.slotColor3.value;
+      els.slotSwatch4.style.background = els.slotColor4.value;
+    }
+
+    function saveState(){
+      const state = {
+        startSlot: els.startSlot.value,
+        endSlot: els.endSlot.value,
+        layerCount: els.layerCount.value,
+        density: els.density.value,
+        patternShape: els.patternShape.value,
+        waveType: els.waveType.value,
+        waveMixFloor: els.waveMixFloor.value,
+        smoothnessMode: els.smoothnessMode.value,
+        slotColor1: els.slotColor1.value,
+        slotColor2: els.slotColor2.value,
+        slotColor3: els.slotColor3.value,
+        slotColor4: els.slotColor4.value,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (state.startSlot) els.startSlot.value = state.startSlot;
+        if (state.endSlot) els.endSlot.value = state.endSlot;
+        if (state.layerCount) els.layerCount.value = state.layerCount;
+        if (state.density) els.density.value = state.density;
+        if (state.patternShape) els.patternShape.value = state.patternShape;
+        if (state.waveType) els.waveType.value = state.waveType;
+        if (state.waveMixFloor) els.waveMixFloor.value = state.waveMixFloor;
+        if (state.smoothnessMode) els.smoothnessMode.value = state.smoothnessMode;
+        if (state.slotColor1) els.slotColor1.value = state.slotColor1;
+        if (state.slotColor2) els.slotColor2.value = state.slotColor2;
+        if (state.slotColor3) els.slotColor3.value = state.slotColor3;
+        if (state.slotColor4) els.slotColor4.value = state.slotColor4;
+      } catch {}
+    }
+
+    function applyWaveType(t, waveType){
+      t = Math.max(0, Math.min(1, t));
+      if (waveType === 'sine') {
+        return 0.5 - 0.5 * Math.cos(Math.PI * t);
       }
-    }
-
-    function renderGrid() {
-      el.grid.innerHTML = '';
-      el.count.textContent = `${filtered.length} / ${sortedColors.length} colors`;
-      for (const c of filtered) {
-        const hx = normalizeHex(c.hex);
-        const btn = document.createElement('button');
-        btn.className = 'paintSwatch' + (selected && selected.name === c.name && selected.hex === c.hex ? ' active' : '');
-        btn.type = 'button';
-
-        const tip = document.createElement('div');
-        tip.className = 'tooltip';
-        tip.textContent = `${c.name} • ${hx}`;
-
-        const inner = document.createElement('div');
-        inner.className = 'paintColor';
-        inner.style.backgroundColor = isValidHex(hx) ? hx : 'transparent';
-
-        btn.appendChild(tip);
-        btn.appendChild(inner);
-
-        btn.addEventListener('click', () => {
-          selected = c;
-          renderGrid();
-          renderDetails();
-        });
-
-        el.grid.appendChild(btn);
+      if (waveType === 'ease') {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       }
+      return t;
     }
 
-    function renderDetails() {
-      if (!selected) {
-        el.selName.textContent = '—';
-        el.selMeta.textContent = '—';
-        el.bigSwatch.style.backgroundColor = 'transparent';
-        el.channelPattern.textContent = '—';
-        el.numericPattern.textContent = '—';
+    function buildLinearProgress(totalEntries, waveType) {
+      if (totalEntries <= 1) return [0];
+      const arr = [];
+      for (let i = 0; i < totalEntries; i++) {
+        const t = i / (totalEntries - 1);
+        arr.push(applyWaveType(t, waveType));
+      }
+      return arr;
+    }
+
+    function buildBoomerangProgress(totalEntries, mixFloor, waveType) {
+      if (totalEntries <= 1) return [0];
+      const arr = [];
+      const half = (totalEntries - 1) / 2;
+
+      for (let i = 0; i < totalEntries; i++) {
+        let raw;
+        if (i <= half) raw = half === 0 ? 0 : i / half;
+        else raw = half === 0 ? 0 : (totalEntries - 1 - i) / half;
+
+        raw = Math.max(0, Math.min(1, raw));
+        raw = applyWaveType(raw, waveType);
+
+        let t = raw;
+        if (mixFloor > 0 && i !== 0 && i !== totalEntries - 1 && i !== Math.round(half)) {
+          t = mixFloor + raw * (1 - 2 * mixFloor);
+        }
+        if (i === 0 || i === totalEntries - 1) t = 0;
+        if (i === Math.round(half)) t = 1;
+        arr.push(Math.max(0, Math.min(1, t)));
+      }
+      return arr;
+    }
+
+    function progressToPattern(progress, startSlot, endSlot, shape) {
+      if (!progress.length) return [];
+      const out = [];
+      let error = 0;
+
+      for (let i = 0; i < progress.length; i++) {
+        if (i === 0) {
+          out.push(String(startSlot));
+          continue;
+        }
+        if (i === progress.length - 1) {
+          out.push(String(shape === 'boomerang' ? startSlot : endSlot));
+          continue;
+        }
+        const t = progress[i];
+        error += t;
+        if (error >= 1) {
+          out.push(String(endSlot));
+          error -= 1;
+        } else {
+          out.push(String(startSlot));
+        }
+      }
+
+      out[0] = String(startSlot);
+      out[out.length - 1] = String(shape === 'boomerang' ? startSlot : endSlot);
+      if (shape === 'boomerang') {
+        const mid = Math.round((out.length - 1) / 2);
+        out[mid] = String(endSlot);
+      }
+      return out;
+    }
+
+    function antiClumpPass(pattern, startSlot, endSlot, strength){
+      const arr = pattern.slice();
+      const threshold = strength === 'soft' ? 6 : 4;
+      const lookahead = strength === 'soft' ? 2 : 3;
+      const startVal = String(startSlot);
+      const endVal = String(endSlot);
+
+      for (let i = threshold; i < arr.length - lookahead - 1; i++) {
+        const current = arr[i];
+        let run = 1;
+        for (let j = i - 1; j >= 0 && arr[j] === current; j--) run++;
+
+        if (run >= threshold) {
+          const opposite = current === endVal ? startVal : endVal;
+          let hasOppositeSoon = false;
+          for (let k = 1; k <= lookahead; k++) {
+            if (arr[i + k] === opposite) {
+              hasOppositeSoon = true;
+              break;
+            }
+          }
+          if (!hasOppositeSoon) {
+            const pos = Math.min(arr.length - 2, i + Math.ceil(lookahead / 2));
+            if (pos > 0 && pos < arr.length - 1) arr[pos] = opposite;
+          }
+        }
+      }
+
+      return arr;
+    }
+
+    function generatePattern(startSlot, endSlot, totalEntries, shape, waveType, waveMixFloor, mode){
+      const progress = shape === 'boomerang'
+        ? buildBoomerangProgress(totalEntries, waveMixFloor, waveType)
+        : buildLinearProgress(totalEntries, waveType);
+
+      let base = progressToPattern(progress, startSlot, endSlot, shape);
+
+      if (mode === 'soft') base = antiClumpPass(base, startSlot, endSlot, 'soft');
+      if (mode === 'medium') base = antiClumpPass(base, startSlot, endSlot, 'medium');
+
+      base[0] = String(startSlot);
+      base[base.length - 1] = String(shape === 'boomerang' ? startSlot : endSlot);
+      if (shape === 'boomerang') {
+        const mid = Math.round((base.length - 1) / 2);
+        base[mid] = String(endSlot);
+      }
+      return base;
+    }
+
+    function modeLabel(mode){
+      if (mode === 'linear') return 'Linear';
+      if (mode === 'soft') return 'Soft Anti-Clump';
+      if (mode === 'medium') return 'Medium Anti-Clump';
+      return mode;
+    }
+
+    function shapeLabel(shape){
+      if (shape === 'boomerang') return 'Start → End → Start';
+      return 'Start → End';
+    }
+
+    function waveTypeLabel(waveType){
+      if (waveType === 'sine') return 'Sine';
+      if (waveType === 'ease') return 'Ease In/Out';
+      return 'Linear';
+    }
+
+    function updatePatternSamplePreview(pattern){
+      const slotColors = getSlotColors();
+      els.previewBar.innerHTML = '';
+      const previewCount = 24;
+      els.previewBar.style.gridTemplateColumns = `repeat(${previewCount}, minmax(0, 1fr))`;
+
+      for (let i = 0; i < previewCount; i++) {
+        const startIdx = Math.floor(i * pattern.length / previewCount);
+        const endIdx = Math.max(startIdx + 1, Math.floor((i + 1) * pattern.length / previewCount));
+        let sum = {r:0,g:0,b:0};
+        let count = 0;
+        for (let j = startIdx; j < endIdx && j < pattern.length; j++) {
+          const color = slotColors[pattern[j]];
+          const rgb = hexToRgb(color);
+          if (!rgb) continue;
+          sum.r += rgb.r; sum.g += rgb.g; sum.b += rgb.b;
+          count++;
+        }
+        const avg = count ? {r:sum.r/count, g:sum.g/count, b:sum.b/count} : hexToRgb(slotColors[1]);
+        const cell = document.createElement('div');
+        cell.className = 'preview-cell';
+        cell.style.background = rgbToCss(avg);
+        const pct = Math.round((i / Math.max(1, previewCount - 1)) * 100);
+        
+        els.previewBar.appendChild(cell);
+      }
+
+      const startSlot = String(pattern[0] || '1');
+      const endSlot = String(pattern[Math.floor((pattern.length - 1) / 2)] || '2');
+      els.legendSwA.style.background = slotColors[startSlot];
+      els.legendSwB.style.background = slotColors[endSlot];
+      els.legendA.textContent = `Start Slot ${startSlot}`;
+      els.legendB.textContent = `Peak Slot ${endSlot}`;
+    }
+
+    function generate(){
+      updateSlotSwatches();
+
+      const startSlot = clampInt(els.startSlot.value, 1, 4);
+      const endSlot = clampInt(els.endSlot.value, 1, 4);
+      const layerCount = clampInt(els.layerCount.value, 2, 50000);
+      const density = clampNum(els.density.value, 0.25, 4);
+      const patternShape = els.patternShape.value;
+      const waveType = els.waveType.value;
+      const waveMixFloor = clampNum(els.waveMixFloor.value, 0, 0.49);
+      const smoothnessMode = els.smoothnessMode.value;
+      const totalEntries = Math.max(3, Math.round(layerCount * density));
+
+      const pattern = generatePattern(startSlot, endSlot, totalEntries, patternShape, waveType, waveMixFloor, smoothnessMode);
+      const output = pattern.join(':');
+
+      els.output.value = output;
+      els.statRoute.textContent = patternShape === 'boomerang'
+        ? `${startSlot} → ${endSlot} → ${startSlot}`
+        : `${startSlot} → ${endSlot}`;
+      els.statLayers.textContent = String(layerCount);
+      els.statDensity.textContent = `${density}×`;
+      els.statShape.textContent = shapeLabel(patternShape);
+      els.statWaveType.textContent = waveTypeLabel(waveType);
+      els.statSmoothness.textContent = modeLabel(smoothnessMode);
+      els.statTotalEntries.textContent = String(totalEntries);
+      els.footerNote.textContent = `Generated ${totalEntries} entries from ${layerCount} layers at ${density}× density with ${shapeLabel(patternShape)}, ${waveTypeLabel(waveType)}, using ${modeLabel(smoothnessMode)} mode.`;
+
+      updatePatternSamplePreview(pattern);
+      saveState();
+    }
+
+    async function copyOutput(){
+      if (!els.output.value.trim()) {
+        els.footerNote.textContent = 'Nothing to copy yet.';
         return;
       }
-      const hx = normalizeHex(selected.hex);
-      el.bigSwatch.style.backgroundColor = isValidHex(hx) ? hx : 'transparent';
-      el.selName.textContent = selected.name || '—';
-      const ratio = selected.ratio_min ? ` • ratio ${selected.ratio_min}` : '';
-      el.selMeta.textContent = `${hx}${ratio}`;
-
-      const patt = getPatternFor(selected);
-      el.channelPattern.textContent = patt || '—';
-
-      const tokens = parsePattern(patt);
-      const map = getMap();
-      const numeric = toNumeric(tokens, map);
-      el.numericPattern.textContent = numeric.length ? numeric.join(':') : '—';
-    }
-
-    function applyModeButtons() {
-      if (mode === 'interleaved') {
-        el.btnInter.classList.add('active');
-        el.btnGroup.classList.remove('active');
-      } else {
-        el.btnGroup.classList.add('active');
-        el.btnInter.classList.remove('active');
+      try {
+        await navigator.clipboard.writeText(els.output.value);
+        els.footerNote.textContent = 'Output copied to clipboard.';
+      } catch {
+        els.output.select();
+        document.execCommand('copy');
+        els.footerNote.textContent = 'Output copied using fallback copy.';
       }
     }
 
-    function applyFilter() {
-      const q = String(el.search.value || '').trim().toLowerCase();
-      if (!q) {
-        filtered = sortedColors;
-      } else {
-        filtered = sortedColors.filter(c => {
-          const name = String(c.name || '').toLowerCase();
-          const hx = String(c.hex || '').toLowerCase();
-          return name.includes(q) || hx.includes(q);
+    function downloadOutput(){
+      const text = els.output.value.trim();
+      if (!text) {
+        els.footerNote.textContent = 'Nothing to download yet.';
+        return;
+      }
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'gradient-pattern-v8.txt';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      els.footerNote.textContent = 'Downloaded gradient-pattern-v8.txt';
+    }
+
+    function resetDefaults(){
+      els.startSlot.value = '1';
+      els.endSlot.value = '2';
+      els.layerCount.value = '499';
+      els.density.value = '1';
+      els.patternShape.value = 'linear';
+      els.waveType.value = 'linear';
+      els.waveMixFloor.value = '0.08';
+      els.smoothnessMode.value = 'linear';
+      els.slotColor1.value = '#00d5df';
+      els.slotColor2.value = '#ff00ff';
+      els.slotColor3.value = '#ffee33';
+      els.slotColor4.value = '#ffffff';
+      saveState();
+      generate();
+    }
+
+    els.generateBtn.addEventListener('click', generate);
+    els.copyBtn.addEventListener('click', copyOutput);
+    els.downloadBtn.addEventListener('click', downloadOutput);
+    els.swapBtn.addEventListener('click', () => {
+      const a = els.startSlot.value;
+      els.startSlot.value = els.endSlot.value;
+      els.endSlot.value = a;
+      generate();
+    });
+    els.resetBtn.addEventListener('click', resetDefaults);
+
+    [
+      els.startSlot, els.endSlot, els.layerCount, els.density, els.patternShape, els.waveType, els.waveMixFloor, els.smoothnessMode,
+      els.slotColor1, els.slotColor2, els.slotColor3, els.slotColor4
+    ].forEach(el => {
+      el.addEventListener('change', () => {
+        saveState();
+        generate();
+      });
+      if (el.type === 'color') {
+        el.addEventListener('input', () => {
+          updateSlotSwatches();
+          generate();
         });
       }
-      if (filtered.length && (!selected || !filtered.some(c => c.name === selected.name && c.hex === selected.hex))) {
-        selected = filtered[0];
-      }
-      renderGrid();
-      renderDetails();
-    }
-
-    el.btnInter.addEventListener('click', () => {
-      mode = 'interleaved';
-      applyModeButtons();
-      renderDetails();
-    });
-    el.btnGroup.addEventListener('click', () => {
-      mode = 'grouped';
-      applyModeButtons();
-      renderDetails();
     });
 
-    el.search.addEventListener('input', applyFilter);
-    [el.mapR, el.mapG, el.mapB, el.mapW].forEach(inp => {
-      inp.addEventListener('input', renderDetails);
-    });
-
-    el.copyChannel.addEventListener('click', async () => {
-      const text = String(el.channelPattern.textContent || '');
-      if (text && text !== '—') await copyText(text);
-    });
-
-    el.copyNumeric.addEventListener('click', async () => {
-      const text = String(el.numericPattern.textContent || '');
-      if (text && text !== '—') await copyText(text);
-    });
-
-    applyModeButtons();
-    renderGrid();
-    renderDetails();
-    el.count.textContent = `${filtered.length} / ${sortedColors.length} colors`;
+    loadState();
+    updateSlotSwatches();
+    generate();
   </script>
 </body>
 </html>
